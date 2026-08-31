@@ -950,9 +950,7 @@ async function enviarRecuperacion() {
         await supabaseClient.auth.resetPasswordForEmail(
             email,
             {
-                redirectTo:
-                    window.location.origin +
-                    "/restablecer-password.html"
+                redirectTo: "https://mspcgamingrd-tech.github.io/web/restablecer-password.html"
             }
         );
 
