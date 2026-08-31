@@ -836,8 +836,33 @@ async function crearCuentaDefinitiva() {
         });
 
         if (error) {
-            console.error(error);
-            mostrarMensaje(error.message || "No se pudo crear la cuenta.", true);
+            // DIAGNÓSTICO: mostrar la respuesta completa de Supabase.
+            // No modifica el proceso de registro; solamente hace visible
+            // el código/estado que Supabase devuelve cuando falla.
+            console.group("MS PC Gaming Store - Error de registro");
+            console.error("Objeto completo:", error);
+            console.error("Nombre:", error.name || "(sin nombre)");
+            console.error("Código:", error.code || "(sin código)");
+            console.error("Estado HTTP:", error.status || "(sin estado)");
+            console.error("Mensaje:", error.message || "(sin mensaje)");
+            console.error("Detalles:", error.details || "(sin detalles)");
+            console.error("Hint:", error.hint || "(sin hint)");
+            console.groupEnd();
+
+            const codigo = error.code ? "\nCódigo: " + error.code : "";
+            const estado = error.status ? "\nEstado: " + error.status : "";
+            const detalles = error.details ? "\nDetalles: " + error.details : "";
+            const hint = error.hint ? "\nHint: " + error.hint : "";
+
+            mostrarMensaje(
+                "Supabase rechazó el registro." +
+                "\n\nMensaje: " + (error.message || "Sin mensaje") +
+                codigo +
+                estado +
+                detalles +
+                hint,
+                true
+            );
             return;
         }
 
