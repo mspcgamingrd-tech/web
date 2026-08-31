@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MS PC Gaming Store - Administrador</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#111827}
+header{background:#111827;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:21px}
+header button{border:0;border-radius:7px;padding:10px 15px;cursor:pointer}
+.contenedor{max-width:1200px;margin:25px auto;padding:0 18px}
+.panel{background:#fff;border-radius:12px;padding:22px;box-shadow:0 3px 14px rgba(0,0,0,.08);margin-bottom:20px}
+h2{margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.campo{display:flex;flex-direction:column;gap:6px}
+.campo.full{grid-column:1/-1}
+label{font-weight:700;font-size:14px}
+input,textarea,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:7px;font:inherit}
+textarea{min-height:100px;resize:vertical}
+.acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+button.principal{background:#111827;color:#fff;border:0;border-radius:7px;padding:11px 16px;cursor:pointer;font-weight:700}
+button.secundario{background:#e5e7eb;color:#111827;border:0;border-radius:7px;padding:11px 16px;cursor:pointer;font-weight:700}
+button.peligro{background:#dc2626;color:#fff;border:0;border-radius:7px;padding:9px 13px;cursor:pointer}
+button:disabled{opacity:.6;cursor:not-allowed}
+.estado{padding:10px;border-radius:7px;background:#f3f4f6;margin-bottom:15px}
+.estado.ok{background:#dcfce7;color:#166534}
+.estado.error{background:#fee2e2;color:#991b1b}
+.productos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px}
+.producto{border:1px solid #e5e7eb;border-radius:10px;padding:14px;background:#fff}
+.producto img{width:100%;height:180px;object-fit:contain;background:#f8fafc;border-radius:7px}
+.producto h3{margin:10px 0 6px}
+.producto p{margin:5px 0;color:#4b5563}
+.admins{display:grid;gap:10px}
+.admin{border:1px solid #e5e7eb;border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.preview{max-width:220px;max-height:180px;margin-top:8px;object-fit:contain;border-radius:7px}
+.ayuda{font-size:13px;color:#6b7280}
+.oculto{display:none}
+@media(max-width:700px){
+  .grid{grid-template-columns:1fr}
+  .campo.full{grid-column:auto}
+  .admin{align-items:flex-start;flex-direction:column}
+  header{gap:12px;align-items:flex-start;flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>MS PC Gaming Store — Panel de Administrador</h1>
+    <button type="button" onclick="cerrarSesion()">Cerrar sesión</button>
+</header>
+
+<div class="contenedor">
+
+    <div id="estado" class="estado">Comprobando permisos...</div>
+
+    <div class="panel oculto" id="panelAyuda">
+        <strong>Cómo funciona:</strong> los productos que publiques aquí se guardan en Supabase.
+        La imagen se sube al almacenamiento <strong>productos</strong>.
+    </div>
+
+    <div class="panel oculto" id="panelMigracion">
+        <h2>Productos anteriores</h2>
+        <p class="ayuda">Los productos que estaban en el antiguo <strong>index.html</strong> se registran automáticamente en Supabase al abrir este administrador. Se conserva toda su información y se dejan sin imagen para que puedas colocarla después desde <strong>Editar</strong>.</p>
+        <button type="button" class="principal" id="btnMigrarAntiguos">Comprobar productos anteriores</button>
+        <div id="resultadoMigracion" class="ayuda" style="margin-top:10px"></div>
+    </div>
+
+    <section id="panelPrincipal" class="oculto">
+
+        <div class="panel">
+            <h2 id="tituloFormulario">Publicar producto</h2>
+
+            <form id="formProducto">
+                <input type="hidden" id="productoId">
+
+                <div class="grid">
+                    <div class="campo">
+                        <label>Nombre del producto</label>
+                        <input id="nombre" required>
+                    </div>
+
+                    <div class="campo">
+                        <label>Precio (RD$)</label>
+                        <input id="precio" type="number" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="campo">
+                        <label>Categoría</label>
+                        <select id="categoria" required>
+                            <option value="">Selecciona una categoría</option>
+
+                            <!-- Componentes principales -->
+                            <option>Tarjeta gráfica</option>
+                            <option>Procesador</option>
+                            <option>Placa madre</option>
+                            <option>Memoria RAM</option>
+                            <option>Almacenamiento</option>
+                            <option>SSD SATA</option>
+                            <option>SSD NVMe</option>
+                            <option>Disco duro HDD</option>
+                            <option>Fuente de poder</option>
+                            <option>UPS / Regulador</option>
+
+                            <!-- Gabinetes y refrigeración -->
+                            <option>Case Gamer</option>
+                            <option>Ventiladores</option>
+                            <option>Refrigeración líquida</option>
+                            <option>Disipador de CPU</option>
+                            <option>Pasta térmica</option>
+                            <option>Soporte para tarjeta gráfica</option>
+
+                            <!-- Monitores y soportes -->
+                            <option>Monitor</option>
+                            <option>Soporte para monitor</option>
+                            <option>Brazo para monitor</option>
+
+                            <!-- Periféricos -->
+                            <option>Mouse</option>
+                            <option>Teclado</option>
+                            <option>Mousepad</option>
+                            <option>Auriculares Gamer</option>
+                            <option>Bocinas</option>
+                            <option>Micrófono</option>
+                            <option>Webcam</option>
+                            <option>Control / Gamepad</option>
+
+                            <!-- Conectividad y cables -->
+                            <option>Cables</option>
+                            <option>Adaptadores</option>
+                            <option>Hub USB</option>
+                            <option>Wi-Fi / Bluetooth</option>
+                            <option>Red / Ethernet</option>
+
+                            <!-- Iluminación y accesorios -->
+                            <option>RGB / Iluminación</option>
+                            <option>Accesorios para PC</option>
+                            <option>Capturadora</option>
+                            <option>Tarjeta de sonido</option>
+                            <option>Adaptador Bluetooth</option>
+                            <option>Adaptador Wi-Fi</option>
+
+                            <!-- Gaming y escritorio -->
+                            <option>Silla Gamer</option>
+                            <option>Escritorio Gamer</option>
+                            <option>Soportes</option>
+                            <option>Controladores</option>
+
+                            <!-- Otros -->
+                            <option>Laptop / Notebook</option>
+                            <option>Software</option>
+                            <option>Otros</option>
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label>Cantidad disponible</label>
+                        <input id="cantidad" type="number" min="0" step="1" required>
+                    </div>
+
+                    <div class="campo">
+                        <label>Imagen</label>
+                        <input id="imagen" type="file" accept="image/jpeg,image/png,image/webp">
+                        <div class="ayuda">Formatos permitidos: JPG, PNG o WEBP. Máximo 5 MB.</div>
+                        <img id="vistaPrevia" class="preview oculto" alt="Vista previa del producto">
+                    </div>
+
+                    <div class="campo">
+                        <label>Estado</label>
+                        <select id="disponible">
+                            <option value="true">Disponible</option>
+                            <option value="false">Agotado</option>
+                        </select>
+                    </div>
+
+                    <div class="campo full">
+                        <label>Descripción</label>
+                        <textarea id="descripcion"></textarea>
+                    </div>
+
+                    <div class="campo full">
+                        <label>Lo que te ofrece</label>
+                        <textarea id="loQueOfrece"></textarea>
+                    </div>
+
+                    <div class="campo full">
+                        <label>Datos técnicos</label>
+                        <textarea id="datosTecnicos"></textarea>
+                    </div>
+                </div>
+
+                <div class="acciones">
+                    <button class="principal" type="submit" id="btnGuardar">Publicar producto</button>
+                    <button class="secundario" type="button" onclick="limpiarFormulario()">Cancelar / Nuevo</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Productos</h2>
+            <div id="listaProductos" class="productos"></div>
+        </div>
+
+        <div class="panel" id="panelAdmins">
+            <h2>Administradores</h2>
+            <p>El administrador principal puede convertir una cuenta existente en administrador secundario.</p>
+
+            <div class="grid">
+                <div class="campo">
+                    <label>Correo de la cuenta existente</label>
+                    <input id="correoAdmin" type="email" placeholder="correo@ejemplo.com">
+                </div>
+            </div>
+
+            <div class="acciones">
+                <button class="principal" type="button" onclick="agregarAdminSecundario()">Agregar administrador secundario</button>
+            </div>
+
+            <div id="listaAdmins" class="admins" style="margin-top:15px"></div>
+        </div>
+
+    </section>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   SUPABASE
+   ========================================================= */
+
+const SUPABASE_URL = "https://tqcoguvqoxvjohdzngqe.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_CyIQ-3xksclxNp2j-X2JAA_DUbdIMn_";
+
+/*
+   UUID DEL ADMINISTRADOR PRINCIPAL.
+   Se utiliza solamente para reconocer la cuenta principal
+   después de comprobar que la sesión pertenece a Supabase.
+*/
+const ADMIN_PRINCIPAL_UUID = "a08b2696-3f82-4c3f-9299-f9be2a85ef24";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+        auth:{
+            persistSession:true,
+            autoRefreshToken:true,
+            detectSessionInUrl:true
+        }
+    }
+);
+
+let adminActual = null;
+let usuarioAutenticado = null;
+let iniciando = false;
+
+/* =========================================================
+   ESTADO DE LA PÁGINA
+   ========================================================= */
+
+function mostrarEstado(texto, tipo=""){
+    const estado = document.getElementById("estado");
+    if(!estado) return;
+
+    estado.className = "estado" + (tipo ? " " + tipo : "");
+    estado.textContent = texto;
+}
+
+function mostrarPanel(){
+    document.getElementById("panelPrincipal").classList.remove("oculto");
+        document.getElementById("panelMigracion").classList.remove("oculto");
+        document.getElementById("panelAyuda").classList.remove("oculto");
+    document.getElementById("panelAyuda").classList.remove("oculto");
+}
+
+function ocultarPanel(){
+    document.getElementById("panelPrincipal").classList.add("oculto");
+    document.getElementById("panelAyuda").classList.add("oculto");
+}
+
+/* =========================================================
+   COMPROBACIÓN DE ADMINISTRADOR
+   ========================================================= */
+
+async function comprobarAdministrador(user){
+    if(!user || !user.id){
+        return {admin:null,error:new Error("No existe un usuario autenticado.")};
+    }
+
+    /*
+       Primero comprobamos el UUID real que entrega Supabase Auth.
+       No usamos localStorage para decidir si alguien es administrador.
+    */
+    const uuidAutenticado = String(user.id).toLowerCase().trim();
+
+    console.log("UUID autenticado por Supabase:", uuidAutenticado);
+
+    /*
+       Consulta exactamente la fila del usuario autenticado.
+       Se mantiene la estructura existente de admin_users:
+       user_id, rol y activo.
+    */
+    const {data:admin,error} = await supabaseClient
+        .from("admin_users")
+        .select("user_id,rol,activo")
+        .eq("user_id",user.id)
+        .eq("activo",true)
+        .maybeSingle();
+
+    if(error){
+        console.error("Error consultando admin_users:", error);
+        return {admin:null,error};
+    }
+
+    if(!admin){
+        return {
+            admin:null,
+            error:new Error("Esta cuenta tiene sesión iniciada, pero no tiene permisos de administrador.")
+        };
+    }
+
+    /*
+       El administrador principal debe conservar el rol principal.
+       Si el UUID coincide con el principal pero la fila devuelve otro
+       rol, no se modifica Supabase: simplemente se respeta el rol real.
+    */
+    if(uuidAutenticado === ADMIN_PRINCIPAL_UUID){
+        console.log("Administrador principal reconocido por UUID.");
+    }
+
+    return {admin,error:null};
+}
+
+/* =========================================================
+   INICIO DEL PANEL
+   ========================================================= */
+
+async function iniciar(){
+    if(iniciando) return;
+    iniciando = true;
+
+    ocultarPanel();
+    mostrarEstado("Comprobando permisos...");
+
+    try{
+        /*
+           getSession() recupera la sesión persistida de Supabase.
+        */
+        let {data,error} = await supabaseClient.auth.getSession();
+
+        if(error){
+            console.error("Error en getSession():", error);
+            mostrarEstado("No se pudo comprobar la sesión: " + error.message,"error");
+            return;
+        }
+
+        /*
+           Si por alguna razón getSession() todavía no devuelve sesión,
+           damos una oportunidad a Supabase para recuperar/refrescar
+           la sesión antes de expulsar al usuario.
+        */
+        if(!data.session){
+            const resultadoUsuario = await supabaseClient.auth.getUser();
+
+            if(!resultadoUsuario.error && resultadoUsuario.data?.user){
+                data = {
+                    session:{
+                        user:resultadoUsuario.data.user
+                    }
+                };
+            }
+        }
+
+        if(!data.session?.user){
+            mostrarEstado("No hay una sesión iniciada. Redirigiendo al inicio de sesión...","error");
+            setTimeout(()=>{
+                location.href = "registro.html";
+            },900);
+            return;
+        }
+
+        usuarioAutenticado = data.session.user;
+
+        console.log("Sesión encontrada:", {
+            id: usuarioAutenticado.id,
+            email: usuarioAutenticado.email
+        });
+
+        const resultado = await comprobarAdministrador(usuarioAutenticado);
+
+        if(resultado.error){
+            console.error("Comprobación de administrador:", resultado.error);
+
+            mostrarEstado(
+                resultado.error.message ||
+                "No se pudo comprobar el permiso de administrador.",
+                "error"
+            );
+            return;
+        }
+
+        adminActual = resultado.admin;
+
+        if(!adminActual){
+            mostrarEstado(
+                "Esta cuenta tiene sesión iniciada, pero no tiene permisos de administrador.",
+                "error"
+            );
+            return;
+        }
+
+        mostrarEstado(
+            "Sesión de administrador activa · Rol: " + adminActual.rol,
+            "ok"
+        );
+
+        mostrarPanel();
+
+        if(adminActual.rol !== "principal"){
+            document.getElementById("panelAdmins").classList.add("oculto");
+        }else{
+            document.getElementById("panelAdmins").classList.remove("oculto");
+        }
+
+        /*
+           MIGRACIÓN AUTOMÁTICA DE LOS PRODUCTOS ANTIGUOS
+           Los productos se crean en Supabase sin imagen.
+           Después el administrador puede usar "Editar" para poner
+           la imagen y guardarla en Supabase Storage.
+        */
+        try{
+            await migrarProductosAntiguos(true);
+        }catch(error){
+            console.error("Migración automática de productos antiguos:", error);
+        }
+
+        await cargarProductos();
+
+        if(adminActual.rol === "principal"){
+            await cargarAdmins();
+        }
+
+    }catch(error){
+        console.error("Error inesperado iniciando el panel:",error);
+        mostrarEstado(
+            "Ocurrió un error al comprobar los permisos: " +
+            (error?.message || error),
+            "error"
+        );
+    }finally{
+        iniciando = false;
+    }
+}
+
+/*
+   También escuchamos cambios de autenticación para que el panel
+   reaccione correctamente cuando Supabase restaura/refresca la sesión.
+*/
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+    console.log("Supabase Auth:",event);
+
+    if(event === "SIGNED_OUT"){
+        adminActual = null;
+        usuarioAutenticado = null;
+        ocultarPanel();
+        mostrarEstado("Sesión cerrada.","error");
+        return;
+    }
+
+    if(
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "INITIAL_SESSION"
+    ){
+        if(session?.user){
+            /*
+               No ejecutamos otra comprobación simultánea durante el
+               arranque inicial si iniciar() ya está trabajando.
+            */
+            if(!iniciando){
+                iniciar();
+            }
+        }
+    }
+});
+
+/* =========================================================
+   CERRAR SESIÓN
+   ========================================================= */
+
+async function cerrarSesion(){
+    try{
+        await supabaseClient.auth.signOut();
+    }catch(error){
+        console.error("Error cerrando sesión:",error);
+    }
+
+    adminActual = null;
+    usuarioAutenticado = null;
+    location.href = "registro.html";
+}
+
+/* =========================================================
+   PRODUCTOS
+   ========================================================= */
+
+async function cargarProductos(){
+    if(!adminActual){
+        mostrarEstado("No hay permisos de administrador activos.","error");
+        return;
+    }
+
+    const {data,error} =
+        await supabaseClient
+        .from("products")
+        .select("*")
+        .order("created_at",{ascending:false});
+
+    if(error){
+        console.error("Error cargando productos:",error);
+        alert("No se pudieron cargar los productos: " + error.message);
+        return;
+    }
+
+    const lista = document.getElementById("listaProductos");
+    lista.innerHTML = "";
+
+    if(!data || data.length === 0){
+        lista.innerHTML = "<p>No hay productos publicados.</p>";
+        return;
+    }
+
+    data.forEach(p=>{
+        const div = document.createElement("div");
+        div.className = "producto";
+
+        const img = document.createElement("img");
+        img.src = p.imagen_url || "";
+        img.alt = p.nombre || "Producto";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = p.nombre || "";
+
+        const precio = document.createElement("p");
+        precio.textContent =
+            "RD$ " + Number(p.precio || 0).toLocaleString("es-DO");
+
+        const cat = document.createElement("p");
+        cat.textContent = "Categoría: " + (p.categoria || "");
+
+        const stock = document.createElement("p");
+        stock.textContent =
+            "Cantidad: " + (p.cantidad ?? 0) +
+            " · " + (p.disponible ? "Disponible" : "Agotado");
+
+        const acciones = document.createElement("div");
+        acciones.className = "acciones";
+
+        const editar = document.createElement("button");
+        editar.type = "button";
+        editar.className = "secundario";
+        editar.textContent = "Editar";
+        editar.onclick = ()=>editarProducto(p);
+
+        const eliminar = document.createElement("button");
+        eliminar.type = "button";
+        eliminar.className = "peligro";
+        eliminar.textContent = "Eliminar";
+        eliminar.onclick = ()=>eliminarProducto(p);
+
+        acciones.append(editar,eliminar);
+        div.append(img,h3,precio,cat,stock,acciones);
+        lista.appendChild(div);
+    });
+}
+
+/* =========================================================
+   MIGRACIÓN DE PRODUCTOS ANTIGUOS
+   ========================================================= */
+const PRODUCTOS_ANTIGUOS = [{"nombre":"Tarjeta gráfica GTX 1660 Super 6GB","precio":6000,"categoria":"tarjeta grafica","descripcion":"La ASUS GeForce GTX 1660 SUPER de 6GB es una tarjeta gráfica basada en la arquitectura NVIDIA Turing, diseñada para ofrecer un buen nivel de rendimiento en juegos y aplicaciones gráficas, especialmente en resolución 1080p. Sus 6GB de memoria GDDR6 permiten trabajar con juegos modernos y cargas gráficas que requieren mayor memoria de video. Es una opción equilibrada para construir o actualizar un equipo gaming de gama media, buscando una experiencia fluida sin exigir el consumo de energía de modelos más potentes. Su interfaz PCI Express facilita su integración en placas base compatibles. Antes de instalarla, es importante comprobar el espacio disponible en el gabinete y los conectores de alimentación requeridos por la variante ASUS específica.","lo_que_ofrece":"6 GB de memoria GDDR6\nArquitectura NVIDIA Turing\nRendimiento orientado a gaming en 1080p\nAdecuada para juegos competitivos y uso multimedia\nInterfaz PCI Express","datos_tecnicos":"GPU: NVIDIA GeForce GTX 1660 SUPER\nMemoria: 6 GB GDDR6\nArquitectura: NVIDIA Turing\nInterfaz: PCI Express\nResolución y conectores: dependen de la variante ASUS","cantidad":0,"disponible":false},{"nombre":"Tarjeta gráfica RX 580 4GB","precio":4500,"categoria":"tarjeta grafica","descripcion":"La Sapphire Radeon RX 580 de 4GB es una tarjeta gráfica orientada a equipos gaming económicos que buscan jugar en resolución Full HD. Dispone de 4GB de memoria GDDR5 y está pensada para ofrecer un rendimiento equilibrado en juegos y aplicaciones gráficas compatibles con DirectX 12. Es una alternativa útil para actualizar una computadora que necesita una tarjeta dedicada con más capacidad gráfica que una solución integrada. Su interfaz PCI Express permite instalarla en una placa base compatible, mientras que el sistema de alimentación y los conectores pueden variar según la versión exacta de Sapphire. Es recomendable verificar el modelo específico antes de la instalación para confirmar sus conexiones y requisitos de energía.","lo_que_ofrece":"4 GB de memoria GDDR5\nOrientada a gaming en Full HD\nCompatible con DirectX 12\nAlternativa para equipos gaming económicos\nInterfaz PCI Express","datos_tecnicos":"GPU: AMD Radeon RX 580\nMemoria: 4 GB GDDR5\nInterfaz: PCI Express\nUso recomendado: gaming en 1080p\nConectores y alimentación: dependen del modelo Sapphire","cantidad":0,"disponible":false},{"nombre":"MEMORIA RAM DDR4 XPOWER 32GB 3200MHz","precio":7000,"categoria":"memoria ram ddr4","descripcion":"La memoria RAM XPOWER Gaming de 32GB DDR4 a 3200MHz está pensada para equipos que necesitan una mayor capacidad de memoria para gaming, multitarea y uso diario. Sus 32GB permiten mantener más aplicaciones y procesos activos al mismo tiempo, mientras que la frecuencia de 3200MHz ofrece una plataforma de memoria rápida para sistemas compatibles. Es una opción adecuada para quienes desean ampliar la capacidad de su PC y contar con mayor margen para juegos, programas y tareas simultáneas. La configuración exacta del kit debe comprobarse antes de la instalación, especialmente la cantidad de módulos y la compatibilidad de la placa base con DDR4 a 3200MHz.","lo_que_ofrece":"32 GB de capacidad total\nMemoria DDR4\nFrecuencia de 3200 MHz\nPensada para gaming y multitarea\nMayor capacidad para aplicaciones y juegos","datos_tecnicos":"Capacidad: 32 GB\nTipo: DDR4\nFrecuencia: 3200 MHz\nConfiguración: depende del kit\nCompatibilidad: placa base compatible con DDR4","cantidad":0,"disponible":false},{"nombre":"Monitor Sansui 24\"","precio":4500,"categoria":"monitor pantalla","descripcion":"El monitor Sansui de 24 pulgadas ofrece una pantalla Full HD de 1920 × 1080 píxeles con una frecuencia de actualización de 75Hz. Está pensado para gaming casual, estudio, trabajo, navegación y consumo de contenido multimedia, proporcionando una imagen más fluida que una pantalla convencional de 60Hz. Su tamaño de 24 pulgadas ofrece un espacio cómodo para trabajar y jugar sin ocupar demasiado espacio en el escritorio. Es una alternativa práctica para una PC de uso diario o un setup gaming de entrada. Los conectores disponibles pueden variar según la versión exacta del monitor, por lo que se recomienda comprobar las entradas del modelo antes de realizar la instalación.","lo_que_ofrece":"Pantalla de 24 pulgadas\nResolución Full HD 1920 × 1080\nFrecuencia de actualización de 75 Hz\nAdecuado para gaming, estudio y multimedia\nFormato práctico para escritorio","datos_tecnicos":"Tamaño: 24 pulgadas\nResolución: 1920 × 1080\nFrecuencia: 75 Hz\nTipo de uso: gaming, estudio y multimedia\nConectores: dependen del modelo","cantidad":0,"disponible":false},{"nombre":"Mouse Inphic PG-01","precio":1000,"categoria":"mouse raton gaming","descripcion":"El Inphic PG-01 es un mouse orientado al gaming y al uso diario, diseñado para ofrecer un manejo cómodo y preciso durante las sesiones frente a la computadora. Su diseño está pensado para acompañar actividades como jugar, navegar, estudiar y trabajar, proporcionando un control directo del cursor. Es una opción práctica para complementar un setup gaming sin complicar la instalación: se conecta al equipo y permite comenzar a utilizarlo de forma sencilla. Las características concretas como cantidad de botones, sensor, iluminación o sensibilidad pueden variar según la versión del PG-01, por lo que conviene verificar la variante disponible antes de comprar.","lo_que_ofrece":"Diseño orientado a gaming\nForma pensada para un manejo cómodo\nAdecuado para gaming y uso diario\nControl preciso del cursor\nInstalación sencilla","datos_tecnicos":"Marca: Inphic\nModelo: PG-01\nTipo: Mouse gaming\nUso: gaming y oficina\nCaracterísticas adicionales: dependen de la variante","cantidad":0,"disponible":false},{"nombre":"Soporte para Monitor","precio":3500,"categoria":"soporte monitor","descripcion":"El soporte para monitor está diseñado para elevar y organizar la pantalla en el escritorio, ayudando a aprovechar mejor el espacio disponible y a conseguir una posición de trabajo más cómoda. Su diseño ajustable permite adaptar la colocación del monitor según el modelo y la configuración del usuario, mientras que su construcción está pensada para ofrecer estabilidad durante el uso diario. Es una solución práctica para mejorar la organización de un setup gaming, de estudio o de oficina. La compatibilidad depende del sistema de montaje y, cuando corresponde, del patrón VESA del monitor, por lo que es importante comprobar las medidas y especificaciones antes de instalarlo.","lo_que_ofrece":"Diseño ajustable\nAyuda a organizar el espacio del escritorio\nFavorece una posición más cómoda del monitor\nConstrucción resistente\nCompatibilidad según patrón VESA y modelo","datos_tecnicos":"Tipo: Soporte para monitor\nAjuste: depende del modelo\nCompatibilidad: depende del patrón VESA\nUso: gaming, estudio y oficina","cantidad":1,"disponible":true},{"nombre":"Memoria RAM DDR3 de 16 GB 2x8 GB.","precio":1800,"categoria":"memoria ram ddr3","descripcion":"El kit de memoria RAM DDR3 de 16GB está formado por dos módulos de 8GB y trabaja a 1600MHz. Está pensado para computadoras compatibles con memoria DDR3 que necesiten ampliar su capacidad para mejorar la multitarea y el funcionamiento de aplicaciones y juegos compatibles. La configuración de dos módulos permite disponer de 16GB de memoria total y puede aprovechar configuraciones de memoria de doble canal cuando la placa base lo admite. Es una alternativa para actualizar equipos basados en plataformas DDR3, siempre comprobando previamente el tipo de memoria soportado por la placa y la capacidad máxima admitida.","lo_que_ofrece":"16 GB de memoria total\n2 módulos de 8 GB\nTipo DDR3\nFrecuencia de 1600 MHz\nAdecuada para equipos compatibles","datos_tecnicos":"Capacidad: 16 GB\nConfiguración: 2 × 8 GB\nTipo: DDR3\nFrecuencia: 1600 MHz\nCompatibilidad: placas base compatibles con DDR3","cantidad":0,"disponible":false},{"nombre":"MONITOR MSI, 24\" PRO MP243W E14 144HZ.","precio":6500,"categoria":"monitor pantalla","descripcion":"El MSI PRO MP243W E14 de 24 pulgadas está orientado a usuarios que buscan una pantalla con alta frecuencia de actualización para gaming y una experiencia más fluida durante el uso diario. Su frecuencia de 144Hz permite mostrar más actualizaciones por segundo que un monitor convencional de 60Hz, algo especialmente útil en juegos de movimiento rápido. El tamaño de 24 pulgadas ofrece un formato cómodo para escritorio y productividad. El producto está enfocado tanto a gaming como a tareas generales de computadora. Las conexiones y algunas características del panel deben verificarse según la variante exacta indicada en la unidad disponible.","lo_que_ofrece":"Pantalla de 24 pulgadas\nFrecuencia de actualización de 144 Hz\nDiseñada para gaming y productividad\nFormato adecuado para escritorio\nSerie MSI PRO","datos_tecnicos":"Marca: MSI\nModelo: PRO MP243W E14\nTamaño: 24 pulgadas\nFrecuencia: 144 Hz\nConectores y características del panel: según la variante","cantidad":0,"disponible":false},{"nombre":"SSD NVMe M.2 256GB.","precio":1500,"categoria":"ssd almacenamiento","descripcion":"El SSD NVMe M.2 de 256GB es una unidad de almacenamiento interna diseñada para mejorar la respuesta de una computadora compatible frente a un disco duro tradicional. Su formato M.2 permite una instalación compacta directamente en la placa base cuando esta dispone de una ranura compatible, mientras que la interfaz NVMe está orientada a ofrecer un acceso rápido a los datos. Con 256GB de capacidad puede utilizarse para instalar el sistema operativo, aplicaciones, juegos y archivos de uso frecuente. Es una opción práctica para actualizar una PC o laptop compatible y reducir los tiempos de arranque y carga. La interfaz exacta de la ranura debe comprobarse antes de la compra.","lo_que_ofrece":"256 GB de almacenamiento\nFormato compacto M.2\nInterfaz NVMe\nMayor respuesta que un disco duro tradicional\nIdeal para actualización de equipos compatibles","datos_tecnicos":"Capacidad: 256 GB\nFormato: M.2\nInterfaz: NVMe\nTipo: SSD interno\nCompatibilidad: depende de la ranura M.2 de la placa","cantidad":0,"disponible":false},{"nombre":"Power supply asrock pro 750G 750W 80 PLUS GOLD.","precio":4200,"categoria":"fuente de poder power supply","descripcion":"La ASRock Pro 750G es una fuente de poder de 750W con certificación 80 PLUS Gold, diseñada para suministrar energía de forma estable a computadoras de escritorio y equipos gaming. Su capacidad de 750W ofrece margen para configuraciones de gama media y alta, dependiendo del consumo de los componentes instalados. La certificación 80 PLUS Gold identifica una fuente orientada a una buena eficiencia energética bajo las condiciones establecidas por la certificación. Es una pieza fundamental para construir o actualizar un PC, especialmente cuando se instala una tarjeta gráfica dedicada. Antes de elegirla para una configuración concreta, se recomienda comprobar los conectores disponibles y los requisitos de energía de todos los componentes.","lo_que_ofrece":"750 W de potencia\nCertificación 80 PLUS Gold\nDiseñada para equipos gaming\nAdecuada para configuraciones de gama media y alta\nAlimentación para componentes de PC","datos_tecnicos":"Marca: ASRock\nModelo: Pro 750G\nPotencia: 750 W\nCertificación: 80 PLUS Gold\nConectores: verificar según la variante","cantidad":0,"disponible":false},{"nombre":"Refrigeracion liquida thermalright aqua elite V5","precio":4500,"categoria":"refrigeracion liquida cooler","descripcion":"La Thermalright Aqua Elite V5 es un sistema de refrigeración líquida AIO diseñado para ayudar a mantener bajo control la temperatura de procesadores compatibles. Este tipo de solución utiliza un circuito cerrado con bomba, bloque para el procesador y radiador para transferir y disipar el calor, siendo una alternativa para equipos gaming y configuraciones que necesitan una refrigeración más eficiente. Su diseño está orientado a mantener un funcionamiento estable del CPU durante cargas de trabajo prolongadas. La compatibilidad depende del socket y del kit concreto, por lo que es importante comprobar los soportes incluidos antes de instalarla en la placa base.","lo_que_ofrece":"Refrigeración líquida AIO\nDiseñada para controlar la temperatura del procesador\nOrientada a equipos gaming\nSistema de circuito cerrado\nDiseño moderno para PC","datos_tecnicos":"Marca: Thermalright\nModelo: Aqua Elite V5\nTipo: Refrigeración líquida AIO\nCompatibilidad: depende del socket y kit\nInstalación: requiere soporte compatible","cantidad":0,"disponible":false},{"nombre":"SOYO B550M AM4 M.2 USB 3.1","precio":4500,"categoria":"motherboard placa madre am4","descripcion":"La SOYO B550M es una placa base Micro-ATX para la plataforma AMD AM4, diseñada para equipos que utilizan procesadores Ryzen compatibles y memoria DDR4. Su chipset B550 proporciona una plataforma moderna dentro del socket AM4 y permite construir o actualizar un equipo orientado a gaming, productividad y uso general. Incluye una ranura M.2 para almacenamiento compatible y conectividad USB 3.1 para periféricos y dispositivos externos. Es una opción compacta para quienes buscan reunir componentes actuales de la plataforma AM4 en un gabinete de tamaño reducido. La compatibilidad exacta de procesadores debe comprobarse según la versión de BIOS de la placa.","lo_que_ofrece":"Socket AMD AM4\nSoporte para memoria DDR4\nChipset B550\nRanura M.2 para almacenamiento\nConectividad USB 3.1\nFormato Micro-ATX","datos_tecnicos":"Chipset: B550\nSocket: AM4\nMemoria: DDR4\nAlmacenamiento: M.2\nFormato: Micro-ATX\nProcesadores: Ryzen compatibles según BIOS","cantidad":0,"disponible":false},{"nombre":"Pasta Termica Thermal Grizzly Kryonaut 1g","precio":700,"categoria":"pasta termica refrigeracion","descripcion":"La Thermal Grizzly Kryonaut de 1 gramo es una pasta térmica de alto rendimiento destinada a mejorar la transferencia de calor entre un procesador o chip gráfico y su sistema de refrigeración. Al rellenar las pequeñas imperfecciones entre las superficies de contacto, ayuda a favorecer una transferencia térmica más eficiente cuando se aplica correctamente. Su presentación de 1g resulta práctica para una instalación o mantenimiento de un equipo, según la cantidad utilizada. Es adecuada para tareas de mantenimiento de CPU y GPU compatibles y puede acompañar tanto sistemas de refrigeración por aire como soluciones líquidas. La correcta aplicación y limpieza de las superficies son importantes para obtener un buen contacto térmico.","lo_que_ofrece":"Pasta térmica de alto rendimiento\nPresentación de 1 gramo\nUso en CPU y GPU\nAyuda a mejorar la transferencia de calor\nAdecuada para mantenimiento de sistemas de refrigeración","datos_tecnicos":"Marca: Thermal Grizzly\nModelo: Kryonaut\nCantidad: 1 g\nTipo: Pasta térmica\nUso: CPU y GPU","cantidad":0,"disponible":false},{"nombre":"AMD Ryzen 5 5600G.","precio":5500,"categoria":"procesador ryzen 5 cpu","descripcion":"El AMD Ryzen 5 5600G es un procesador de 6 núcleos y 12 hilos para plataforma AM4 que combina capacidad de procesamiento con gráficos Radeon integrados. Su frecuencia base es de 3.9GHz y puede alcanzar hasta 4.4GHz en modo Boost, ofreciendo un buen equilibrio para gaming, productividad, estudio y uso general. Al incorporar gráficos integrados, permite montar un equipo compatible sin necesidad de instalar inmediatamente una tarjeta gráfica dedicada, siempre que el rendimiento gráfico requerido sea adecuado para la configuración. Es una opción versátil para equipos AM4 que buscan varios núcleos, múltiples hilos y una solución gráfica integrada.","lo_que_ofrece":"6 núcleos y 12 hilos\nFrecuencia base de 3.9 GHz\nHasta 4.4 GHz Boost\nGráficos Radeon integrados\nPlataforma AMD AM4","datos_tecnicos":"Modelo: AMD Ryzen 5 5600G\nNúcleos: 6\nHilos: 12\nFrecuencia base: 3.9 GHz\nBoost: hasta 4.4 GHz\nGráficos: Radeon integrados\nSocket: AM4","cantidad":0,"disponible":false},{"nombre":"Power supply Corsair SF600 80 Plus Gold–600W","precio":4000,"categoria":"fuente de poder power supply","descripcion":"La Corsair SF600 es una fuente de poder de 600W con certificación 80 PLUS Gold y formato SFX, diseñada especialmente para equipos compactos que utilizan una fuente de tamaño reducido. Su diseño 100% modular permite conectar únicamente los cables necesarios para la configuración, ayudando a mantener el interior del gabinete más ordenado. Los 600W de potencia pueden ser adecuados para diferentes equipos compactos y configuraciones gaming compatibles, siempre dependiendo del consumo de sus componentes. Es una opción interesante para proyectos Mini-ITX o gabinetes que requieren formato SFX. Antes de instalarla, se debe comprobar que el gabinete y la placa base sean compatibles con el formato y conectores requeridos.","lo_que_ofrece":"600 W de potencia\nCertificación 80 PLUS Gold\nFormato compacto SFX\nDiseño 100% modular\nPensada para equipos compactos","datos_tecnicos":"Marca: Corsair\nModelo: SF600\nPotencia: 600 W\nCertificación: 80 PLUS Gold\nFormato: SFX\nCableado: 100% modular","cantidad":0,"disponible":false},{"nombre":"CASE Gamer AGI-C015 ARGB","precio":2500,"categoria":"case gamer gabinete","descripcion":"El AGI-C015 es un gabinete gaming diseñado para construir un equipo con una presentación moderna y espacio para componentes de escritorio compatibles. Incorpora iluminación ARGB para personalizar la apariencia del setup y está preparado para placas base en formatos ATX y Micro-ATX. Su distribución interna busca facilitar el montaje de los componentes y favorecer una configuración ordenada. El gabinete puede utilizarse en equipos gaming y de uso general donde se quiera combinar funcionalidad con una estética orientada al gaming. Antes del montaje es importante comprobar las dimensiones de la tarjeta gráfica, refrigeración, fuente de poder y demás componentes para asegurar la compatibilidad física con la configuración elegida.","lo_que_ofrece":"Iluminación ARGB\nDiseño gaming moderno\nCompatibilidad ATX y Micro-ATX\nEspacio interno para componentes compatibles\nOrientado a configuraciones gaming","datos_tecnicos":"Modelo: AGI-C015\nTipo: Gabinete gaming\nIluminación: ARGB\nCompatibilidad de placa: ATX/Micro-ATX\nCompatibilidad de componentes: depende de las dimensiones","cantidad":0,"disponible":false},{"nombre":"Motherboard H81M-V3H M.2 SOYO LGA 1150","precio":3000,"categoria":"motherboard placa madre lga1150","descripcion":"La SOYO H81M-V3H es una placa base Micro-ATX para procesadores Intel compatibles con el socket LGA 1150 y memoria DDR3. Está orientada a equipos basados en plataformas Intel de cuarta generación y ofrece una alternativa compacta para actualizar o construir computadoras compatibles con esta generación. Su ranura M.2 permite utilizar un dispositivo de almacenamiento compatible con la interfaz que admita la placa. Al tratarse de una plataforma anterior, es especialmente importante comprobar el modelo del procesador, tipo de memoria y compatibilidad exacta del almacenamiento antes de realizar la instalación.","lo_que_ofrece":"Socket LGA 1150\nSoporte para memoria DDR3\nFormato Micro-ATX\nRanura M.2\nCompatible con plataformas Intel LGA 1150","datos_tecnicos":"Marca: SOYO\nModelo: H81M-V3H\nSocket: LGA 1150\nMemoria: DDR3\nFormato: Micro-ATX\nAlmacenamiento: M.2","cantidad":0,"disponible":false},{"nombre":"Motherboard PRO B840M-B","precio":8500,"categoria":"Motherboard placa madre","descripcion":"La MSI PRO B840M-B es una placa base Micro-ATX de plataforma AMD AM5 diseñada para equipos modernos de gaming y productividad. Utiliza el chipset B840 y ofrece compatibilidad con procesadores AMD Ryzen Serie 9000 según la plataforma indicada para el modelo. Para almacenamiento incorpora una interfaz PCIe 4.0 M.2 y para red ofrece LAN de 2.5G. También dispone de un conector frontal USB Tipo-C, proporcionando conectividad moderna para gabinetes compatibles. Es una opción pensada para quienes desean construir un equipo AM5 compacto con tecnologías actuales y margen para actualizar sus componentes dentro de la plataforma compatible.","lo_que_ofrece":"Plataforma AMD AM5\nCompatible con AMD Ryzen Serie 9000\nPCIe 4.0 M.2\nLAN 2.5G\nConector frontal USB Tipo-C\nDiseño MSI PRO Micro-ATX","datos_tecnicos":"Marca: MSI\nModelo: PRO B840M-B\nSocket: AMD AM5\nChipset: B840\nAlmacenamiento: PCIe 4.0 M.2\nRed: LAN 2.5G\nConector: USB Tipo-C frontal","cantidad":1,"disponible":true},{"nombre":"refrigeracion liquida antec skeleton 240 argb","precio":3800,"categoria":"Refrigeración líquida AIO cooler","descripcion":"La Antec Skeleton-240 ARGB es una solución de refrigeración líquida AIO diseñada para ayudar a mantener controlada la temperatura de procesadores compatibles. Su radiador de 240mm ofrece una superficie amplia para disipar el calor, mientras que los ventiladores con control PWM permiten ajustar su velocidad de funcionamiento de acuerdo con la carga térmica. La iluminación ARGB aporta un acabado visual personalizable para equipos gaming. Es una alternativa para configuraciones que requieren una refrigeración líquida de 240mm, siempre que el gabinete y el socket del procesador sean compatibles con el kit. Antes del montaje se debe comprobar el espacio disponible para el radiador y los soportes incluidos.","lo_que_ofrece":"Radiador de 240 mm\nRefrigeración líquida AIO\nVentiladores con control PWM\nIluminación ARGB personalizable\nDiseñada para equipos gaming","datos_tecnicos":"Marca: Antec\nModelo: Skeleton-240 ARGB\nTipo: Refrigeración líquida AIO\nRadiador: 240 mm\nControl de ventiladores: PWM\nIluminación: ARGB","cantidad":1,"disponible":true},{"nombre":"M.2 SanDisk optimus 5100 500GB","precio":4500,"categoria":"Dispositivo de almacenamiento ssd m.2","descripcion":"El SANDISK Optimus 5100 NVMe SSD de 500GB es una unidad de almacenamiento interna de alto rendimiento diseñada para actualizar computadoras de escritorio y laptops compatibles. Utiliza el formato compacto M.2 2280 y la interfaz PCIe 4.0 x4 NVMe, ofreciendo velocidades muy superiores a las de un disco duro tradicional y una respuesta rápida al abrir aplicaciones, cargar archivos y trabajar con diferentes programas. Su capacidad de 500GB permite almacenar el sistema operativo, aplicaciones, juegos, documentos, fotografías y otros archivos. SanDisk lo orienta especialmente a usuarios que buscan una combinación de rendimiento, capacidad y eficiencia energética.","lo_que_ofrece":"500 GB de capacidad\nSSD NVMe interno\nFormato M.2 2280\nInterfaz PCIe 4.0 x4 NVMe\nLectura secuencial de hasta 6,600 MB/s\nEscritura secuencial de hasta 5,600 MB/s\nLectura aleatoria de hasta 660K IOPS\nEscritura aleatoria de hasta 1.1M IOPS\nMemoria SANDISK QLC 3D CBA NAND\nHost Memory Buffer + SANDISK nCache 4.0","datos_tecnicos":"Capacidad: 500 GB\nTipo: SSD NVMe interno\nFormato: M.2 2280\nInterfaz: PCIe 4.0 x4, NVMe\nLectura secuencial: hasta 6,600 MB/s\nEscritura secuencial: hasta 5,600 MB/s\nLectura aleatoria: hasta 660K IOPS\nEscritura aleatoria: hasta 1.1M IOPS\nMemoria NAND: SANDISK QLC 3D CBA NAND\nCaché: Host Memory Buffer + SANDISK nCache 4.0\nDimensiones: 80 × 22 × 2.38 mm\nPeso: 5.7 g\nTemperatura de funcionamiento: 0 °C a 85 °C\nTemperatura sin funcionamiento: -40 °C a 85 °C\nModelo: SDSP51500GAN-000E0\nCompatibilidad indicada: Windows 10 o posterior, interfaz PCIe 4.0 x4 y puerto M.2 2280","cantidad":1,"disponible":true},{"nombre":"CASE antec VX310 ARGB","precio":3500,"categoria":"case gamer gabinete","descripcion":"El Antec VX310 ARGB es un gabinete para PC con diseño gaming, iluminación ARGB y panel lateral de vidrio templado. Su compatibilidad con placas base ATX y Micro-ATX permite utilizarlo en una variedad de configuraciones de escritorio, desde equipos de uso general hasta sistemas gaming. El panel lateral de vidrio permite mostrar visualmente los componentes y la iluminación del interior, mientras que la distribución del gabinete está pensada para facilitar el montaje y favorecer una configuración con buen flujo de aire. La compatibilidad final depende de las dimensiones de la tarjeta gráfica, refrigeración, fuente y demás componentes que se quieran instalar.","lo_que_ofrece":"Iluminación ARGB\nPanel lateral de vidrio templado\nCompatibilidad ATX y Micro-ATX\nDiseño gaming\nDistribución orientada al flujo de aire","datos_tecnicos":"Marca: Antec\nModelo: VX310\nTipo: Gabinete gaming\nFormato de placa: ATX/Micro-ATX\nIluminación: ARGB\nPanel lateral: vidrio templado\nCompatibilidad de componentes: depende de las dimensiones","cantidad":0,"disponible":false},{"nombre":"Motherboard ZSUS X7-VB","precio":2500,"categoria":"motherboard placa madre lga1155","descripcion":"La ZSUS X7-VB es una placa base para procesadores Intel compatibles con el socket LGA 1155 y memoria DDR3. Está orientada a equipos basados en procesadores Intel de segunda y tercera generación y ofrece dos ranuras DIMM para instalar memoria DDR3. También incorpora soporte para almacenamiento M.2 NVMe según la configuración indicada, lo que permite utilizar una unidad compacta compatible en lugar de depender únicamente de discos SATA tradicionales. Es una alternativa para actualizar o mantener un equipo de plataforma LGA 1155, siempre verificando la compatibilidad exacta del procesador, memoria y dispositivo M.2 antes del montaje.","lo_que_ofrece":"Socket LGA 1155\nCompatible con Intel Core de 2ª y 3ª generación\nMemoria DDR3\n2 ranuras DIMM\nSoporte M.2 NVMe","datos_tecnicos":"Marca: ZSUS\nModelo: X7-VB\nSocket: LGA 1155\nMemoria: DDR3\nFrecuencia de memoria indicada: hasta 1600 MHz\nRanuras DIMM: 2\nAlmacenamiento: M.2 NVMe","cantidad":0,"disponible":false},{"nombre":"Monitor Dell 24\" 75Hz 1080p.","precio":4500,"categoria":"monitor pantalla","descripcion":"El monitor Dell de 24 pulgadas ofrece una pantalla con resolución Full HD de 1920 × 1080 píxeles y frecuencia de actualización de 75Hz, pensada para trabajo, estudio, navegación, entretenimiento y gaming casual. La resolución 1080p proporciona una imagen adecuada para el uso cotidiano y el tamaño de 24 pulgadas ofrece un espacio cómodo para aplicaciones y contenido multimedia. Su frecuencia de 75Hz permite una experiencia de movimiento algo más fluida que los paneles convencionales de 60Hz. El diseño sin bordes aporta una apariencia limpia para el escritorio. Las conexiones disponibles deben comprobarse según el modelo exacto del monitor.","lo_que_ofrece":"Pantalla de 24 pulgadas\nResolución Full HD 1920 × 1080\nFrecuencia de 75 Hz\nDiseño sin bordes\nAdecuado para trabajo, estudio y entretenimiento","datos_tecnicos":"Marca: Dell\nTamaño: 24 pulgadas\nResolución: 1920 × 1080\nFrecuencia: 75 Hz\nDiseño: sin bordes\nConectores: según el modelo","cantidad":0,"disponible":false},{"nombre":"Motherboard ZSUS B450–AM4","precio":4500,"categoria":"motherboard placa madre am4","descripcion":"La ZSUS B450 es una placa base para la plataforma AMD AM4, diseñada para trabajar con procesadores Ryzen compatibles y memoria DDR4. Su chipset B450 proporciona una base para equipos de uso general y gaming dentro del ecosistema AM4, mientras que la ranura M.2 NVMe permite instalar almacenamiento compacto compatible. Es una opción práctica para construir o actualizar un PC utilizando componentes DDR4 y procesadores Ryzen compatibles. Antes de comprar o instalar un procesador, es importante comprobar la compatibilidad específica de la CPU y la versión de BIOS de la placa, ya que el soporte puede variar según el modelo y revisión.","lo_que_ofrece":"Socket AMD AM4\nMemoria DDR4\nChipset B450\nRanura M.2 NVMe\nCompatible con procesadores Ryzen","datos_tecnicos":"Marca: ZSUS\nChipset: B450\nSocket: AM4\nMemoria: DDR4\nAlmacenamiento: M.2 NVMe\nProcesadores: Ryzen compatibles según BIOS","cantidad":0,"disponible":false},{"nombre":"Memoria Sam Samsung DDR3L 2*8 1600 Mhz laptop.","precio":2500,"categoria":"memoria ram ddr3 laptop","descripcion":"Este kit Samsung DDR3L de 16GB está compuesto por dos módulos SO-DIMM de 8GB y funciona a 1600MHz, por lo que está diseñado para laptops compatibles con memoria DDR3L. Su capacidad total de 16GB permite ampliar la memoria disponible del equipo para mejorar la multitarea y trabajar con más aplicaciones abiertas. El formato SO-DIMM es el utilizado habitualmente en computadoras portátiles, por lo que no debe confundirse con los módulos DIMM de escritorio. Antes de instalarlo, se debe comprobar que la laptop sea compatible con DDR3L, utilice módulos SO-DIMM y admita la capacidad y frecuencia indicadas.","lo_que_ofrece":"16 GB de capacidad total\nConfiguración 2 × 8 GB\nDDR3L\nFrecuencia de 1600 MHz\nFormato SO-DIMM para laptop","datos_tecnicos":"Marca: Samsung\nCapacidad: 16 GB\nConfiguración: 2 × 8 GB\nTipo: DDR3L SO-DIMM\nFrecuencia: 1600 MHz\nCompatibilidad: laptops compatibles con DDR3L","cantidad":0,"disponible":false},{"nombre":"SSD 120GB YONGXINSHENG SATA3.0.","precio":700,"categoria":"ssd almacenamiento","descripcion":"El YONGXINSHENG SSD de 120GB con interfaz SATA 3.0 es una unidad de almacenamiento pensada para actualizar computadoras de escritorio y laptops compatibles. Frente a un disco duro mecánico tradicional, un SSD puede ofrecer una respuesta más rápida en tareas como iniciar el sistema operativo, abrir aplicaciones y acceder a archivos. Sus 120GB son adecuados para instalar un sistema operativo y aplicaciones esenciales, dejando el espacio restante para documentos y otros archivos según el uso. Su formato de 2.5 pulgadas facilita su instalación en equipos que disponen de una bahía SATA compatible. Antes de instalarlo, conviene verificar el espacio disponible y el conector SATA del equipo.","lo_que_ofrece":"120 GB de capacidad\nInterfaz SATA 3.0\nFormato de 2.5 pulgadas\nArranque y respuesta más rápidos que un HDD\nAdecuado para actualizar PC o laptop","datos_tecnicos":"Marca: YONGXINSHENG\nCapacidad: 120 GB\nTipo: SSD\nInterfaz: SATA 3.0\nFormato: 2.5 pulgadas\nCompatibilidad: equipos con conexión SATA","cantidad":0,"disponible":false},{"nombre":"Alfombrilla de Ratón gamer.","precio":900,"categoria":"alfombrilla raton mouse pad","descripcion":"La alfombrilla gamer está diseñada para proporcionar una superficie estable y suave sobre la que el mouse pueda desplazarse con comodidad durante sesiones de juego y uso diario. Su base antideslizante ayuda a mantenerla en posición sobre el escritorio, evitando movimientos innecesarios mientras se utiliza el mouse. Es un accesorio sencillo que puede complementar cualquier setup gaming, especialmente cuando se busca una superficie más uniforme que la del propio escritorio. También resulta útil para trabajo, estudio y navegación. Las dimensiones exactas y el diseño exterior pueden variar según la versión disponible, por lo que se recomienda comprobar el tamaño del modelo antes de comprar.","lo_que_ofrece":"Superficie suave\nBase antideslizante\nDiseño orientado a gaming\nDesplazamiento cómodo del mouse\nUso gaming, estudio y oficina","datos_tecnicos":"Tipo: Mouse Pad\nSuperficie: textil\nBase: antideslizante\nUso: gaming y diario\nDimensiones: dependen del modelo","cantidad":0,"disponible":false},{"nombre":"Cable Adaptador 24 Pines a 6 Pines.","precio":900,"categoria":"cable adaptador power","descripcion":"El cable adaptador de 24 pines a 6 pines está diseñado para configuraciones específicas que requieren convertir una conexión de alimentación de 24 pines a una salida de 6 pines. Su función principal es facilitar la conexión entre componentes que utilizan este tipo de alimentación, siempre que el cable y el equipo hayan sido diseñados para ser compatibles entre sí. Es un accesorio práctico para determinadas configuraciones, pero no debe utilizarse de forma genérica sin comprobar la distribución de pines y los requisitos eléctricos del hardware. Antes de conectarlo, es importante confirmar que la fuente, placa o dispositivo sean compatibles con este adaptador.","lo_que_ofrece":"Entrada de 24 pines\nSalida de 6 pines\nAdaptador de alimentación\nDiseño práctico para configuraciones compatibles\nDebe utilizarse únicamente con hardware compatible","datos_tecnicos":"Tipo: Adaptador de alimentación\nEntrada: 24 pines\nSalida: 6 pines\nUso: configuraciones compatibles\nCompatibilidad eléctrica: verificar antes de conectar","cantidad":0,"disponible":false},{"nombre":"MOUGOL H61M Motherboard LGA1155.","precio":2000,"categoria":"motherboard placa madre lga1155","descripcion":"La MOUGOL H61M es una placa base para procesadores Intel compatibles con el socket LGA 1155 y memoria DDR3. Está orientada a equipos basados en plataformas Intel de segunda y tercera generación y, según la configuración indicada, admite hasta 16GB de memoria DDR3 a 1600MHz. Es una alternativa para construir, mantener o actualizar computadoras de generaciones anteriores que necesiten una placa compatible con estos componentes. Su formato y conexiones deben comprobarse antes del montaje para asegurar que el gabinete, almacenamiento y demás dispositivos sean compatibles con la placa disponible.","lo_que_ofrece":"Socket LGA 1155\nMemoria DDR3\nHasta 16 GB según configuración\nFrecuencia de hasta 1600 MHz\nPlataforma Intel de 2ª y 3ª generación","datos_tecnicos":"Marca: MOUGOL\nModelo: H61M\nSocket: LGA1155\nMemoria: DDR3\nCapacidad máxima indicada: 16 GB\nFrecuencia: hasta 1600 MHz","cantidad":0,"disponible":false},{"nombre":"Tarjeta Gráfica Radeon R9 390 GAMING 8G.","precio":5500,"categoria":"tarjeta grafica tarjeta de video","descripcion":"La Radeon R9 390 GAMING 8G es una tarjeta gráfica con 8GB de memoria GDDR5 orientada a equipos gaming que buscan trabajar en resolución Full HD. La capacidad de 8GB de memoria gráfica ofrece margen para aplicaciones y juegos que utilizan una cantidad considerable de VRAM, mientras que su diseño está enfocado a ofrecer un rendimiento dedicado superior al de las soluciones gráficas integradas. Es una opción para configuraciones gaming basadas en componentes compatibles con la interfaz PCI Express. Debido a que los conectores y requisitos de alimentación pueden depender de la versión concreta de la tarjeta, se recomienda comprobar el modelo disponible y contar con una fuente de poder adecuada para la configuración.","lo_que_ofrece":"8 GB de memoria GDDR5\nOrientada a gaming en Full HD\nMayor capacidad de memoria gráfica\nInterfaz PCI Express\nDiseño gaming","datos_tecnicos":"GPU: AMD Radeon R9 390\nMemoria: 8 GB GDDR5\nInterfaz: PCI Express\nUso recomendado: gaming en Full HD\nConectores y alimentación: dependen del modelo","cantidad":0,"disponible":false},{"nombre":"Procesador Intel Core i5-4570.","precio":1000,"categoria":"procesador cpu intel i5","descripcion":"El Intel Core i5-4570 es un procesador de 4 núcleos y 4 hilos diseñado para plataformas con socket LGA1150. Trabaja a una frecuencia base de 3.2GHz y puede alcanzar hasta 3.6GHz mediante Turbo, ofreciendo una solución adecuada para equipos de uso general, productividad y gaming en configuraciones compatibles. Está pensado para placas base que soporten esta generación de procesadores Intel, por lo que resulta especialmente útil para actualizar o mantener una computadora basada en LGA1150. Antes de instalarlo, se debe comprobar la compatibilidad de la placa base, la BIOS y el sistema de refrigeración utilizado.","lo_que_ofrece":"4 núcleos y 4 hilos\nFrecuencia base de 3.2 GHz\nHasta 3.6 GHz Turbo\nSocket LGA1150\nProcesador Intel para equipos compatibles","datos_tecnicos":"Marca: Intel\nModelo: Core i5-4570\nNúcleos: 4\nHilos: 4\nFrecuencia base: 3.2 GHz\nTurbo: hasta 3.6 GHz\nSocket: LGA1150","cantidad":0,"disponible":false}];
+
+async function migrarProductosAntiguos(automatico=false){
+    if(!adminActual) return;
+
+    const btn=document.getElementById("btnMigrarAntiguos");
+    const resultado=document.getElementById("resultadoMigracion");
+
+    if(btn){
+        btn.disabled=true;
+        btn.textContent="Sincronizando...";
+    }
+    if(resultado){
+        resultado.textContent="Comprobando productos anteriores en Supabase...";
+    }
+
+    try{
+        const {data:existentes,error:errExistentes}=await supabaseClient
+            .from("products")
+            .select("id,nombre");
+
+        if(errExistentes) throw new Error(errExistentes.message);
+
+        const existentesPorNombre=new Map(
+            (existentes||[]).map(p=>[
+                String(p.nombre||"").trim().toLowerCase(),
+                p.id
+            ])
+        );
+
+        const faltantes=PRODUCTOS_ANTIGUOS.filter(p=>
+            !existentesPorNombre.has(
+                String(p.nombre||"").trim().toLowerCase()
+            )
+        );
+
+        if(!faltantes.length){
+            if(resultado){
+                resultado.textContent=
+                    "✓ Todos los productos anteriores ya están registrados en Supabase.";
+            }
+            await cargarProductos();
+            return;
+        }
+
+        let creados=0;
+        const errores=[];
+
+        /*
+           Se insertan individualmente para que un producto con
+           algún problema no bloquee a los demás.
+        */
+        for(let i=0;i<faltantes.length;i++){
+            const original=faltantes[i];
+
+            const producto={
+                nombre:original.nombre,
+                precio:original.precio,
+                categoria:original.categoria,
+                descripcion:original.descripcion,
+                lo_que_ofrece:original.lo_que_ofrece,
+                datos_tecnicos:original.datos_tecnicos,
+                cantidad:original.cantidad,
+                disponible:original.disponible
+            };
+
+            const {error}=await supabaseClient
+                .from("products")
+                .insert(producto);
+
+            if(error){
+                console.error("No se pudo migrar:",original.nombre,error);
+                errores.push(original.nombre+" → "+error.message);
+            }else{
+                creados++;
+            }
+
+            if(resultado){
+                resultado.textContent=
+                    `Sincronizando productos antiguos... ${i+1}/${faltantes.length}`;
+            }
+        }
+
+        await cargarProductos();
+
+        if(resultado){
+            if(errores.length){
+                resultado.innerHTML=
+                    `✓ ${creados} productos agregados. `+
+                    `${errores.length} necesitan revisión.<br>`+
+                    `<small>${errores.join("<br>")}</small>`;
+            }else{
+                resultado.textContent=
+                    `✓ Listo. Se agregaron ${creados} productos antiguos a Supabase sin imagen.`;
+            }
+        }
+
+    }catch(error){
+        console.error("Error en la migración automática:",error);
+        if(resultado){
+            resultado.textContent=
+                "No se pudo completar la sincronización: "+
+                (error?.message||error);
+        }
+        if(!automatico){
+            alert(
+                "No se pudieron importar los productos antiguos: "+
+                (error?.message||error)
+            );
+        }
+    }finally{
+        if(btn){
+            btn.disabled=false;
+            btn.textContent="Comprobar productos anteriores";
+        }
+    }
+}
+/* =========================================================
+   GUARDAR / PUBLICAR PRODUCTO
+   ========================================================= */
+
+async function guardarProducto(event){
+    event.preventDefault();
+
+    if(!adminActual){
+        alert("No tienes permisos de administrador.");
+        return;
+    }
+
+    const id = document.getElementById("productoId").value.trim();
+    const archivo = document.getElementById("imagen").files[0];
+    const btn = document.getElementById("btnGuardar");
+
+    const nombre = document.getElementById("nombre").value.trim();
+    const precio = Number(document.getElementById("precio").value);
+    const categoria = document.getElementById("categoria").value.trim();
+    const cantidad = Number(document.getElementById("cantidad").value);
+
+    if(
+        !nombre ||
+        !categoria ||
+        !Number.isFinite(precio) ||
+        precio < 0 ||
+        !Number.isInteger(cantidad) ||
+        cantidad < 0
+    ){
+        alert("Revisa el nombre, categoría, precio y cantidad.");
+        return;
+    }
+
+    if(archivo){
+        const tiposPermitidos = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+        if(!tiposPermitidos.includes(archivo.type)){
+            alert("La imagen debe ser JPG, PNG o WEBP.");
+            return;
+        }
+
+        if(archivo.size > 5 * 1024 * 1024){
+            alert("La imagen no puede superar 5 MB.");
+            return;
+        }
+    }
+
+    btn.disabled = true;
+    btn.textContent = id ? "Guardando..." : "Publicando...";
+
+    try{
+        let imagenUrl = null;
+
+        if(archivo){
+            const extension =
+                archivo.name.split(".").pop().toLowerCase();
+
+            const nombreArchivo =
+                crypto.randomUUID() + "." + extension;
+
+            const {error:uploadError} =
+                await supabaseClient.storage
+                .from("productos")
+                .upload(
+                    nombreArchivo,
+                    archivo,
+                    {
+                        upsert:false,
+                        contentType:archivo.type
+                    }
+                );
+
+            if(uploadError){
+                throw new Error(
+                    "No se pudo subir la imagen: " +
+                    uploadError.message
+                );
+            }
+
+            const {data:urlData} =
+                supabaseClient.storage
+                .from("productos")
+                .getPublicUrl(nombreArchivo);
+
+            imagenUrl = urlData.publicUrl;
+        }
+
+        const producto = {
+            nombre,
+            precio,
+            categoria,
+            descripcion:
+                document.getElementById("descripcion").value.trim(),
+            lo_que_ofrece:
+                document.getElementById("loQueOfrece").value.trim(),
+            datos_tecnicos:
+                document.getElementById("datosTecnicos").value.trim(),
+            cantidad,
+            disponible:
+                document.getElementById("disponible").value === "true"
+        };
+
+        /*
+           Cuando no se selecciona una imagen al editar, conservamos
+           la imagen existente porque no enviamos imagen_url.
+        */
+        if(imagenUrl){
+            producto.imagen_url = imagenUrl;
+        }
+
+        let resultado;
+
+        if(id){
+            resultado = await supabaseClient
+                .from("products")
+                .update(producto)
+                .eq("id",id);
+        }else{
+            resultado = await supabaseClient
+                .from("products")
+                .insert(producto);
+        }
+
+        if(resultado.error){
+            throw new Error(resultado.error.message);
+        }
+
+        alert(
+            id
+            ? "Producto actualizado correctamente."
+            : "Producto publicado correctamente."
+        );
+
+        limpiarFormulario();
+        await cargarProductos();
+
+    }catch(error){
+        console.error("Error guardando producto:",error);
+        alert("No se pudo guardar el producto: " + error.message);
+    }finally{
+        btn.disabled = false;
+        btn.textContent = "Publicar producto";
+    }
+}
+
+/* =========================================================
+   EDITAR PRODUCTO
+   ========================================================= */
+
+function editarProducto(p){
+    document.getElementById("productoId").value = p.id || "";
+    document.getElementById("nombre").value = p.nombre || "";
+    document.getElementById("precio").value = p.precio ?? 0;
+    document.getElementById("categoria").value = p.categoria || "";
+    document.getElementById("descripcion").value = p.descripcion || "";
+    document.getElementById("loQueOfrece").value = p.lo_que_ofrece || "";
+    document.getElementById("datosTecnicos").value = p.datos_tecnicos || "";
+    document.getElementById("cantidad").value = p.cantidad ?? 0;
+    document.getElementById("disponible").value = String(!!p.disponible);
+
+    document.getElementById("tituloFormulario").textContent =
+        "Editar producto";
+
+    document.getElementById("btnGuardar").textContent =
+        "Guardar cambios";
+
+    window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* =========================================================
+   ELIMINAR PRODUCTO
+   ========================================================= */
+
+async function eliminarProducto(p){
+    if(!adminActual){
+        alert("No tienes permisos de administrador.");
+        return;
+    }
+
+    if(!confirm("¿Seguro que quieres eliminar \"" + p.nombre + "\"?")){
+        return;
+    }
+
+    const {error} =
+        await supabaseClient
+        .from("products")
+        .delete()
+        .eq("id",p.id);
+
+    if(error){
+        alert("No se pudo eliminar el producto: " + error.message);
+        return;
+    }
+
+    await cargarProductos();
+}
+
+/* =========================================================
+   LIMPIAR FORMULARIO
+   ========================================================= */
+
+function limpiarFormulario(){
+    document.getElementById("formProducto").reset();
+    document.getElementById("productoId").value = "";
+    document.getElementById("disponible").value = "true";
+
+    document.getElementById("tituloFormulario").textContent =
+        "Publicar producto";
+
+    document.getElementById("btnGuardar").textContent =
+        "Publicar producto";
+
+    const vista = document.getElementById("vistaPrevia");
+    vista.src = "";
+    vista.classList.add("oculto");
+}
+
+/* =========================================================
+   VISTA PREVIA DE IMAGEN
+   ========================================================= */
+
+document.getElementById("imagen").addEventListener("change",function(){
+    const archivo = this.files[0];
+    const vista = document.getElementById("vistaPrevia");
+
+    if(!archivo){
+        vista.src = "";
+        vista.classList.add("oculto");
+        return;
+    }
+
+    if(!["image/jpeg","image/png","image/webp"].includes(archivo.type)){
+        vista.src = "";
+        vista.classList.add("oculto");
+        return;
+    }
+
+    vista.src = URL.createObjectURL(archivo);
+    vista.classList.remove("oculto");
+});
+
+/* =========================================================
+   ADMINISTRADORES
+   ========================================================= */
+
+async function cargarAdmins(){
+    if(adminActual?.rol !== "principal"){
+        return;
+    }
+
+    const {data,error} =
+        await supabaseClient
+        .from("admin_users")
+        .select("user_id,rol,activo,created_at")
+        .order("created_at",{ascending:true});
+
+    if(error){
+        alert("No se pudieron cargar los administradores: " + error.message);
+        return;
+    }
+
+    const lista = document.getElementById("listaAdmins");
+    lista.innerHTML = "";
+
+    if(!data || data.length === 0){
+        lista.innerHTML = "<p>No hay administradores registrados.</p>";
+        return;
+    }
+
+    for(const a of data){
+        const div = document.createElement("div");
+        div.className = "admin";
+
+        const texto = document.createElement("div");
+        texto.textContent =
+            a.user_id + " · " + a.rol +
+            (a.activo ? " · Activo" : " · Inactivo");
+
+        div.appendChild(texto);
+
+        /*
+           Nunca mostramos un botón para eliminar al administrador
+           principal. Solamente se pueden quitar secundarios.
+        */
+        if(a.rol === "secundario"){
+            const eliminar = document.createElement("button");
+            eliminar.type = "button";
+            eliminar.className = "peligro";
+            eliminar.textContent = "Quitar";
+            eliminar.onclick = ()=>quitarAdmin(a.user_id);
+            div.appendChild(eliminar);
+        }
+
+        lista.appendChild(div);
+    }
+}
+
+/* =========================================================
+   AGREGAR ADMINISTRADOR SECUNDARIO
+   ========================================================= */
+
+async function agregarAdminSecundario(){
+    if(adminActual?.rol !== "principal"){
+        alert("Solo el administrador principal puede realizar esta acción.");
+        return;
+    }
+
+    const correo =
+        document.getElementById("correoAdmin").value.trim();
+
+    if(!correo){
+        alert("Escribe el correo de una cuenta ya registrada.");
+        return;
+    }
+
+    const {data:perfil,error:perfilError} =
+        await supabaseClient
+        .from("profiles")
+        .select("id,email")
+        .ilike("email",correo)
+        .maybeSingle();
+
+    if(perfilError || !perfil){
+        alert("No encontramos una cuenta registrada con ese correo.");
+        return;
+    }
+
+    const {data:existente,error:consultaError} =
+        await supabaseClient
+        .from("admin_users")
+        .select("user_id,rol,activo")
+        .eq("user_id",perfil.id)
+        .maybeSingle();
+
+    if(consultaError){
+        alert(
+            "No se pudo comprobar el administrador: " +
+            consultaError.message
+        );
+        return;
+    }
+
+    if(existente){
+        alert(
+            existente.activo
+            ? "Esa cuenta ya es administrador."
+            : "Esa cuenta ya existe como administrador pero está inactiva."
+        );
+        return;
+    }
+
+    const {error} =
+        await supabaseClient
+        .from("admin_users")
+        .insert({
+            user_id:perfil.id,
+            rol:"secundario",
+            activo:true
+        });
+
+    if(error){
+        alert(
+            "No se pudo agregar el administrador: " +
+            error.message
+        );
+        return;
+    }
+
+    alert("Administrador secundario agregado correctamente.");
+
+    document.getElementById("correoAdmin").value = "";
+
+    await cargarAdmins();
+}
+
+/* =========================================================
+   QUITAR ADMINISTRADOR SECUNDARIO
+   ========================================================= */
+
+async function quitarAdmin(userId){
+    if(adminActual?.rol !== "principal"){
+        alert("Solo el administrador principal puede realizar esta acción.");
+        return;
+    }
+
+    /*
+       Protección adicional: nunca permitimos quitar desde este panel
+       al UUID configurado como administrador principal.
+    */
+    if(String(userId).toLowerCase() === ADMIN_PRINCIPAL_UUID){
+        alert("El administrador principal no puede ser eliminado desde este panel.");
+        return;
+    }
+
+    if(!confirm("¿Quitar este administrador secundario?")){
+        return;
+    }
+
+    const {error} =
+        await supabaseClient
+        .from("admin_users")
+        .delete()
+        .eq("user_id",userId);
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    await cargarAdmins();
+}
+
+/* =========================================================
+   FORMULARIO
+   ========================================================= */
+
+document.getElementById("formProducto")
+    .addEventListener("submit",guardarProducto);
+
+const botonMigracion=document.getElementById("btnMigrarAntiguos");
+if(botonMigracion){
+    botonMigracion.addEventListener("click",function(){
+        migrarProductosAntiguos(false);
+    });
+}
+
+/* =========================================================
+   INICIAR
+   ========================================================= */
+
+iniciar();
+</script>
+</body>
+</html>

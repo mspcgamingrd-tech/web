@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuenta - MS PC Gaming</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #050b18;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .contenedor-cuenta {
+            width: 100%;
+            max-width: 480px;
+            background: #111827;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(0, 123, 255, 0.25);
+        }
+
+        .logo {
+            display: block;
+            width: 180px;
+            max-width: 100%;
+            margin: 0 auto 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .descripcion {
+            text-align: center;
+            color: #d1d5db;
+            margin-bottom: 25px;
+        }
+
+        .campo-formulario {
+            margin-bottom: 16px;
+        }
+
+        .campo-formulario label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        .campo-formulario input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            background: #1f2937;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .campo-formulario input:focus {
+            border-color: #007bff;
+        }
+
+        .boton-formulario,
+        .boton-secundario {
+            width: 100%;
+            padding: 13px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .boton-formulario {
+            border: none;
+            background: #007bff;
+            color: white;
+            margin-top: 5px;
+        }
+
+        .boton-formulario:hover {
+            background: #0056b3;
+        }
+
+        .boton-secundario {
+            margin-top: 12px;
+            border: 1px solid #374151;
+            background: transparent;
+            color: white;
+        }
+
+        .boton-secundario:hover {
+            background: #1f2937;
+        }
+
+        .mensaje {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+
+        .confirmacion-correo {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #007bff;
+            border-radius: 8px;
+            background: rgba(0, 123, 255, 0.08);
+            text-align: center;
+        }
+        .confirmacion-correo p { margin: 8px 0; }
+        .correo-mostrado { font-weight: bold; word-break: break-word; }
+        .boton-confirmar-correo, .boton-cambiar-correo {
+            width: 100%; padding: 11px; margin-top: 8px;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+        }
+        .boton-confirmar-correo { background: #007bff; color: white; }
+        .boton-cambiar-correo { background: #444; color: white; }
+
+        .campo-password {
+            position: relative;
+        }
+
+        .campo-password input {
+            padding-right: 48px;
+        }
+
+        .boton-ojo {
+            position: absolute;
+            right: 9px;
+            bottom: 7px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border-radius: 6px;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .boton-ojo:hover {
+            color: #007bff;
+            background: rgba(0, 123, 255, 0.08);
+        }
+
+        .icono-ojo {
+            width: 19px;
+            height: 19px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .enlace-recuperacion {
+            display: block;
+            width: max-content;
+            max-width: 100%;
+            margin: 12px auto 0;
+            color: #60a5fa;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .enlace-recuperacion:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+
+        .recuperacion-login {
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .boton-recuperar-login {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #007bff;
+            border-radius: 8px;
+            background: rgba(0, 123, 255, 0.08);
+            color: #60a5fa;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .boton-recuperar-login:hover {
+            background: rgba(0, 123, 255, 0.18);
+            color: white;
+        }
+
+        .oculto {
+            display: none;
+        }
+
+        .cuenta-info p {
+            margin: 12px 0;
+        }
+
+        .boton-cerrar {
+            width: 100%;
+            padding: 13px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
+            background: #dc2626;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor-cuenta">
+
+    <img
+        src="Multimedia web/Logo tienda/MSPC GAMING.PNG.png"
+        alt="MS PC Gaming"
+        class="logo"
+    >
+
+    <!-- =========================
+         REGISTRO
+    ========================== -->
+
+    <div id="registro">
+
+        <h1>Crear cuenta</h1>
+
+        <p class="descripcion">
+            Crea tu cuenta en MS PC Gaming.
+        </p>
+
+        <div class="campo-formulario">
+
+            <label for="registroNombre">
+                Nombre
+            </label>
+
+            <input
+                type="text"
+                id="registroNombre"
+                placeholder="Tu nombre"
+                autocomplete="given-name"
+            >
+
+        </div>
+
+        <div class="campo-formulario">
+
+            <label for="registroApellido">
+                Apellido
+            </label>
+
+            <input
+                type="text"
+                id="registroApellido"
+                placeholder="Tu apellido"
+                autocomplete="family-name"
+            >
+
+        </div>
+
+        <div class="campo-formulario">
+
+            <label for="registroTelefono">
+                Número de teléfono
+            </label>
+
+            <input
+                type="tel"
+                id="registroTelefono"
+                placeholder="809-000-0000"
+                autocomplete="tel"
+                maxlength="12"
+            >
+
+        </div>
+
+        <div class="campo-formulario">
+
+            <label for="registroEmail">
+                Correo electrónico
+            </label>
+
+            <input
+                type="email"
+                id="registroEmail"
+                placeholder="ejemplo@gmail.com"
+                autocomplete="email"
+            >
+
+        </div>
+
+        <div id="confirmacionCorreo" class="confirmacion-correo oculto">
+            <p>📧 <strong>Confirma tu correo electrónico</strong></p>
+            <p>Vamos a enviar el correo de confirmación a:</p>
+            <p id="correoMostrado" class="correo-mostrado"></p>
+            <p>Revisa que tengas acceso a este correo antes de crear la cuenta.</p>
+            <button type="button" class="boton-confirmar-correo" onclick="usarCorreoConfirmado()">
+                SÍ, ESTE ES MI CORREO
+            </button>
+            <button type="button" class="boton-cambiar-correo" onclick="cambiarCorreoAntesDeCrear()">
+                CAMBIAR CORREO
+            </button>
+            <p id="intentosCorreo" style="font-size:13px;"></p>
+        </div>
+
+        <div class="campo-formulario">
+
+            <label for="registroUsername">
+                Nombre de usuario
+            </label>
+
+            <input
+                type="text"
+                id="registroUsername"
+                placeholder="Ejemplo: MSPCGamer"
+                autocomplete="username"
+            >
+
+        </div>
+
+        <div class="campo-formulario campo-password">
+
+            <label for="registroPassword">
+                Contraseña
+            </label>
+
+            <input
+                type="password"
+                id="registroPassword"
+                placeholder="Mínimo 8 caracteres"
+                autocomplete="new-password"
+            >
+
+            <button
+                type="button"
+                class="boton-ojo"
+                aria-label="Mostrar contraseña"
+                title="Mostrar contraseña"
+                onclick="alternarPassword('registroPassword', this)"
+            >
+                <svg class="icono-ojo" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+                    <circle cx="12" cy="12" r="2.8"></circle>
+                </svg>
+            </button>
+
+        </div>
+
+        <button
+            type="button"
+            class="boton-formulario"
+            onclick="crearCuenta()"
+        >
+            CREAR CUENTA
+        </button>
+
+        <button
+            class="boton-secundario"
+            onclick="mostrarInicioSesion()"
+        >
+            YA TENGO CUENTA
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         INICIO DE SESIÓN
+    ========================== -->
+
+    <div
+        id="inicioSesion"
+        class="oculto"
+    >
+
+        <h1>Iniciar sesión</h1>
+
+        <p class="descripcion">
+            Ingresa a tu cuenta de MS PC Gaming.
+        </p>
+
+        <div class="campo-formulario">
+
+            <label for="loginUsuario">
+                Correo o nombre de usuario
+            </label>
+
+            <input
+                type="text"
+                id="loginUsuario"
+                placeholder="Correo o usuario"
+                autocomplete="username"
+            >
+
+        </div>
+
+        <div class="campo-formulario campo-password">
+
+            <label for="loginPassword">
+                Contraseña
+            </label>
+
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Contraseña"
+                autocomplete="current-password"
+            >
+
+            <button
+                type="button"
+                class="boton-ojo"
+                aria-label="Mostrar contraseña"
+                title="Mostrar contraseña"
+                onclick="alternarPassword('loginPassword', this)"
+            >
+                <svg class="icono-ojo" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+                    <circle cx="12" cy="12" r="2.8"></circle>
+                </svg>
+            </button>
+
+        </div>
+
+        <a href="#" class="enlace-recuperacion" onclick="mostrarRecuperacion(event)">
+            ¿Olvidaste tu contraseña?
+        </a>
+
+        <button
+            class="boton-formulario"
+            onclick="iniciarSesion()"
+        >
+            INICIAR SESIÓN
+        </button>
+
+        <div id="recuperacionDesdeLogin" class="recuperacion-login oculto">
+            <button
+                type="button"
+                class="boton-recuperar-login"
+                onclick="abrirRecuperacionDesdeLogin()"
+            >
+                CAMBIAR CONTRASEÑA
+            </button>
+        </div>
+
+        <button
+            class="boton-secundario"
+            onclick="mostrarRegistro()"
+        >
+            CREAR CUENTA
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         RECUPERAR CONTRASEÑA
+    ========================== -->
+
+    <div id="recuperarPassword" class="oculto">
+
+        <h1>Recuperar contraseña</h1>
+
+        <p class="descripcion">
+            Escribe el correo de tu cuenta y te enviaremos un enlace para crear una nueva contraseña.
+        </p>
+
+        <div class="campo-formulario">
+            <label for="recuperacionEmail">
+                Correo electrónico
+            </label>
+
+            <input
+                type="email"
+                id="recuperacionEmail"
+                placeholder="ejemplo@gmail.com"
+                autocomplete="email"
+            >
+        </div>
+
+        <button
+            type="button"
+            class="boton-formulario"
+            onclick="enviarRecuperacion()"
+        >
+            ENVIAR ENLACE
+        </button>
+
+        <button
+            type="button"
+            class="boton-secundario"
+            onclick="mostrarInicioSesion()"
+        >
+            VOLVER A INICIAR SESIÓN
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         CUENTA ACTIVA
+    ========================== -->
+
+    <div
+        id="cuentaActiva"
+        class="oculto"
+    >
+
+        <h1>Mi cuenta</h1>
+
+        <div
+            id="informacionCuenta"
+            class="cuenta-info"
+        ></div>
+
+        <button
+            class="boton-cerrar"
+            onclick="cerrarSesion()"
+        >
+            CERRAR SESIÓN
+        </button>
+
+    </div>
+
+
+    <div
+        id="mensaje"
+        class="mensaje"
+    ></div>
+
+
+    <button
+        class="boton-secundario"
+        onclick="window.location.href='index.html'"
+    >
+        VOLVER A LA TIENDA
+    </button>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =========================
+   SUPABASE
+========================= */
+
+const SUPABASE_URL = "https://tqcoguvqoxvjohdzngqe.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_CyIQ-3xksclxNp2j-X2JAA_DUbdIMn_";
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+        }
+    }
+);
+
+const ADMIN_USERNAME = "adminms";
+
+function guardarUsuarioLocal(usuario) {
+    if (!usuario) {
+        localStorage.removeItem("usuarioActual");
+        return;
+    }
+
+    localStorage.setItem("usuarioActual", JSON.stringify(usuario));
+}
+
+function convertirUsuarioSupabase(user) {
+    if (!user) return null;
+
+    const meta = user.user_metadata || {};
+
+    return {
+        id: user.id,
+        nombre: meta.nombre || "",
+        apellido: meta.apellido || "",
+        telefono: meta.telefono || "",
+        email: user.email || "",
+        username: meta.username || "",
+        esAdministrador:
+            String(meta.username || "").toLowerCase() === ADMIN_USERNAME.toLowerCase()
+    };
+}
+
+async function sincronizarSesion() {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) {
+        console.error("Error obteniendo la sesión:", error);
+        guardarUsuarioLocal(null);
+        mostrarRegistro();
+        return;
+    }
+
+    const usuario = convertirUsuarioSupabase(data.session?.user);
+
+    guardarUsuarioLocal(usuario);
+
+    if (usuario) {
+        mostrarCuenta();
+    } else {
+        mostrarRegistro();
+    }
+}
+
+/* =========================
+   MOSTRAR / OCULTAR CONTRASEÑA
+========================= */
+
+function alternarPassword(id, boton) {
+    const input = document.getElementById(id);
+
+    if (!input) return;
+
+    const visible = input.type === "password";
+
+    input.type = visible ? "text" : "password";
+
+    boton.setAttribute(
+        "aria-label",
+        visible
+            ? "Ocultar contraseña"
+            : "Mostrar contraseña"
+    );
+
+    boton.setAttribute(
+        "title",
+        visible
+            ? "Ocultar contraseña"
+            : "Mostrar contraseña"
+    );
+}
+
+
+/* =========================
+   CAMBIAR A REGISTRO
+========================= */
+
+function mostrarRegistro() {
+    document.getElementById("registro").classList.remove("oculto");
+    document.getElementById("inicioSesion").classList.add("oculto");
+    document.getElementById("recuperarPassword").classList.add("oculto");
+    document.getElementById("cuentaActiva").classList.add("oculto");
+    limpiarMensaje();
+}
+
+/* =========================
+   CAMBIAR A LOGIN
+========================= */
+
+function mostrarInicioSesion() {
+    document.getElementById("registro").classList.add("oculto");
+    document.getElementById("inicioSesion").classList.remove("oculto");
+    document.getElementById("recuperarPassword").classList.add("oculto");
+    document.getElementById("recuperacionDesdeLogin").classList.add("oculto");
+    document.getElementById("cuentaActiva").classList.add("oculto");
+    limpiarMensaje();
+}
+
+
+/* =========================
+   CONFIRMACIÓN DEL CORREO
+========================= */
+
+let correoConfirmadoParaRegistro = false;
+let cambiosCorreoDisponibles = 2;
+
+function validarCorreoBasico(email) {
+    const formatoCorreo = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
+    const dominiosPermitidos = [
+        "gmail.com", "googlemail.com", "icloud.com", "me.com",
+        "outlook.com", "hotmail.com", "live.com", "msn.com",
+        "yahoo.com", "yahoo.es", "proton.me", "protonmail.com"
+    ];
+
+    if (!formatoCorreo.test(email) || (email.match(/@/g) || []).length !== 1) {
+        mostrarMensaje("Ingresa un correo electrónico válido.", true);
+        return false;
+    }
+
+    const dominio = email.split("@")[1].toLowerCase();
+    if (!dominiosPermitidos.includes(dominio)) {
+        mostrarMensaje("Ingresa un correo válido de Gmail, iCloud, Outlook, Hotmail o Yahoo.", true);
+        return false;
+    }
+
+    return true;
+}
+
+async function crearCuenta() {
+    const email = document.getElementById("registroEmail").value.trim();
+
+    if (!validarCorreoBasico(email)) return;
+
+    if (correoConfirmadoParaRegistro) {
+        await crearCuentaDefinitiva();
+        return;
+    }
+
+    document.getElementById("correoMostrado").textContent = email;
+    document.getElementById("confirmacionCorreo").classList.remove("oculto");
+    document.getElementById("intentosCorreo").textContent =
+        "Puedes cambiar este correo hasta " + cambiosCorreoDisponibles + " veces antes de crear la cuenta.";
+    mostrarMensaje("Revisa tu correo antes de continuar.", false);
+    document.getElementById("registroEmail").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function cambiarCorreoAntesDeCrear() {
+    if (cambiosCorreoDisponibles <= 0) {
+        mostrarMensaje("Ya utilizaste tus 2 cambios de correo. Revisa el correo escrito antes de continuar.", true);
+        return;
+    }
+
+    cambiosCorreoDisponibles--;
+    correoConfirmadoParaRegistro = false;
+    document.getElementById("confirmacionCorreo").classList.add("oculto");
+    document.getElementById("registroEmail").focus();
+    mostrarMensaje("Cambia el correo y vuelve a pulsar CREAR CUENTA. Te quedan " + cambiosCorreoDisponibles + " cambios.", false);
+}
+
+async function usarCorreoConfirmado() {
+    const emailActual = document.getElementById("registroEmail").value.trim();
+
+    if (!validarCorreoBasico(emailActual)) return;
+
+    correoConfirmadoParaRegistro = true;
+    document.getElementById("confirmacionCorreo").classList.add("oculto");
+    await crearCuentaDefinitiva();
+}
+
+/* =========================
+   CREAR CUENTA
+========================= */
+
+async function crearCuentaDefinitiva() {
+    try {
+        const nombre = document.getElementById("registroNombre").value.trim();
+        const apellido = document.getElementById("registroApellido").value.trim();
+        const telefono = document.getElementById("registroTelefono").value.trim();
+        const email = document.getElementById("registroEmail").value.trim();
+        const username = document.getElementById("registroUsername").value.trim();
+        const password = document.getElementById("registroPassword").value;
+
+        if (!nombre || !apellido || !telefono || !email || !username || !password) {
+            mostrarMensaje("Ingresa toda tu información correctamente.", true);
+            return;
+        }
+
+        const formatoNombre = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:[ '-][A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)*$/;
+        if (!formatoNombre.test(nombre)) {
+            mostrarMensaje("El nombre solo puede contener letras.", true);
+            return;
+        }
+
+        if (!formatoNombre.test(apellido)) {
+            mostrarMensaje("El apellido solo puede contener letras.", true);
+            return;
+        }
+
+        const telefonoLimpio = telefono.replace(/\D/g, "");
+        if (!/^(809|829|849)\d{7}$/.test(telefonoLimpio)) {
+            mostrarMensaje("Ingresa un número dominicano válido. Debe comenzar con 809, 829 o 849.", true);
+            return;
+        }
+
+        const formatoCorreo = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
+        if (!formatoCorreo.test(email) || (email.match(/@/g) || []).length !== 1) {
+            mostrarMensaje("Ingresa un correo electrónico válido.", true);
+            return;
+        }
+
+        const dominiosPermitidos = [
+            "gmail.com", "googlemail.com", "icloud.com", "me.com",
+            "outlook.com", "hotmail.com", "live.com", "msn.com",
+            "yahoo.com", "yahoo.es", "proton.me", "protonmail.com"
+        ];
+
+        const dominioCorreo = email.split("@")[1].toLowerCase();
+        if (!dominiosPermitidos.includes(dominioCorreo)) {
+            mostrarMensaje("Ingresa un correo válido de Gmail, iCloud, Outlook, Hotmail o Yahoo.", true);
+            return;
+        }
+
+        if (!/^(?=.*[A-Z])(?=.*\d).{8,}$/.test(password)) {
+            mostrarMensaje("La contraseña debe tener mínimo 8 caracteres, una letra mayúscula y un número.", true);
+            return;
+        }
+
+        mostrarMensaje("Creando tu cuenta...", false);
+
+        const { data, error } = await supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                emailRedirectTo: window.location.origin + "/registro.html",
+                data: {
+                    nombre: nombre,
+                    apellido: apellido,
+                    telefono: telefonoLimpio,
+                    username: username
+                }
+            }
+        });
+
+        if (error) {
+            console.error(error);
+            mostrarMensaje(error.message || "No se pudo crear la cuenta.", true);
+            return;
+        }
+
+        const usuario = convertirUsuarioSupabase(data.user);
+        guardarUsuarioLocal(usuario);
+
+        if (data.session) {
+            mostrarMensaje("¡Cuenta creada correctamente!", false);
+            setTimeout(function() {
+                window.location.href = "index.html";
+            }, 1000);
+        } else {
+            mostrarMensaje(
+                "📧 ¡Cuenta creada correctamente! Te enviamos un correo de confirmación a " + email + ". Revisa tu bandeja de entrada y también Spam/Correo no deseado. Debes confirmar tu correo antes de iniciar sesión.",
+                false
+            );
+        }
+
+    } catch (error) {
+        console.error("Error al crear la cuenta:", error);
+        mostrarMensaje("No se pudo crear la cuenta. Revisa los datos e inténtalo nuevamente.", true);
+    }
+}
+
+/* =========================
+   RECUPERAR CONTRASEÑA
+========================= */
+
+function mostrarRecuperacion(event) {
+    if (event) event.preventDefault();
+
+    document.getElementById("registro").classList.add("oculto");
+    document.getElementById("inicioSesion").classList.add("oculto");
+    document.getElementById("recuperacionDesdeLogin").classList.add("oculto");
+    document.getElementById("recuperarPassword").classList.remove("oculto");
+    document.getElementById("cuentaActiva").classList.add("oculto");
+    limpiarMensaje();
+
+    const emailLogin =
+        document.getElementById("loginUsuario").value.trim();
+
+    const campo =
+        document.getElementById("recuperacionEmail");
+
+    if (emailLogin.includes("@")) {
+        campo.value = emailLogin;
+    }
+
+    setTimeout(function() {
+        campo.focus();
+    }, 50);
+}
+
+function abrirRecuperacionDesdeLogin() {
+    const emailLogin =
+        document.getElementById("loginUsuario").value.trim();
+
+    const campo =
+        document.getElementById("recuperacionEmail");
+
+    if (emailLogin.includes("@")) {
+        campo.value = emailLogin;
+    }
+
+    mostrarRecuperacion();
+
+    setTimeout(function() {
+        campo.focus();
+    }, 50);
+}
+
+
+async function enviarRecuperacion() {
+    const email =
+        document.getElementById("recuperacionEmail").value.trim();
+
+    if (!validarCorreoBasico(email)) return;
+
+    mostrarMensaje(
+        "Enviando el enlace de recuperación...",
+        false
+    );
+
+    const { error } =
+        await supabaseClient.auth.resetPasswordForEmail(
+            email,
+            {
+                redirectTo:
+                    window.location.origin +
+                    "/restablecer-password.html"
+            }
+        );
+
+    if (error) {
+        console.error(error);
+
+        mostrarMensaje(
+            "No se pudo enviar el correo de recuperación. Inténtalo nuevamente.",
+            true
+        );
+
+        return;
+    }
+
+    mostrarMensaje(
+        "Si el correo pertenece a una cuenta, recibirás un enlace para cambiar la contraseña. Revisa también Spam o Correo no deseado.",
+        false
+    );
+}
+
+
+/* =========================
+   INICIAR SESIÓN
+========================= */
+
+async function iniciarSesion() {
+    const entrada = document.getElementById("loginUsuario").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    if (!entrada || !password) {
+        mostrarMensaje("Completa los datos de acceso.", true);
+        return;
+    }
+
+    if (!entrada.includes("@")) {
+        mostrarMensaje("Para iniciar sesión, usa el correo electrónico de tu cuenta.", true);
+        return;
+    }
+
+    mostrarMensaje("Iniciando sesión...", false);
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: entrada,
+        password: password
+    });
+
+    if (error) {
+        console.error(error);
+
+        mostrarMensaje(
+            "El correo o la contraseña son incorrectos. Si olvidaste tu contraseña, puedes cambiarla ahora.",
+            true
+        );
+
+        document
+            .getElementById("recuperacionDesdeLogin")
+            .classList.remove("oculto");
+
+        return;
+    }
+
+    const usuario = convertirUsuarioSupabase(data.user);
+    guardarUsuarioLocal(usuario);
+
+    document
+        .getElementById("recuperacionDesdeLogin")
+        .classList.add("oculto");
+
+    mostrarMensaje("¡Sesión iniciada correctamente!", false);
+
+    setTimeout(function() {
+        window.location.href = "index.html";
+    }, 1000);
+}
+
+    /* =========================
+       MOSTRAR CUENTA ACTIVA
+    ========================== */
+
+    async function mostrarCuenta() {
+
+        const { data, error } = await supabaseClient.auth.getSession();
+
+        if (error) {
+            console.error("Error obteniendo la sesión:", error);
+            mostrarRegistro();
+            return;
+        }
+
+        const usuario = convertirUsuarioSupabase(data.session?.user);
+
+        if (!usuario) {
+            mostrarRegistro();
+            return;
+        }
+
+        guardarUsuarioLocal(usuario);
+
+        document.getElementById("registro").classList.add("oculto");
+        document.getElementById("inicioSesion").classList.add("oculto");
+        document.getElementById("recuperarPassword").classList.add("oculto");
+        document.getElementById("cuentaActiva").classList.remove("oculto");
+
+        document.getElementById("informacionCuenta").innerHTML = `
+
+            <p>
+                <strong>Nombre:</strong>
+                ${escapeHTML(usuario.nombre)}
+            </p>
+
+            <p>
+                <strong>Apellido:</strong>
+                ${escapeHTML(usuario.apellido)}
+            </p>
+
+            <p>
+                <strong>Correo:</strong>
+                ${escapeHTML(usuario.email)}
+            </p>
+
+            <p>
+                <strong>Teléfono:</strong>
+                ${escapeHTML(usuario.telefono)}
+            </p>
+
+            <p>
+                <strong>Usuario:</strong>
+                ${escapeHTML(usuario.username)}
+            </p>
+
+        `;
+    }
+
+
+    /* =========================
+       CERRAR SESIÓN
+    ========================== */
+
+    async function cerrarSesion() {
+
+        await supabaseClient.auth.signOut();
+        localStorage.removeItem("usuarioActual");
+
+        mostrarMensaje("Sesión cerrada correctamente.", false);
+
+        setTimeout(function() {
+            mostrarRegistro();
+        }, 500);
+    }
+
+
+    /* =========================
+       MENSAJES
+    ========================== */
+
+    function mostrarMensaje(
+        texto,
+        error
+    ) {
+
+        const mensaje =
+            document.getElementById(
+                "mensaje"
+            );
+
+
+        mensaje.textContent =
+            texto;
+
+
+        mensaje.style.color =
+            error
+                ? "#ff4d4d"
+                : "#00d26a";
+    }
+
+
+    function limpiarMensaje() {
+
+        const mensaje =
+            document.getElementById(
+                "mensaje"
+            );
+
+
+        mensaje.textContent = "";
+    }
+
+
+    /* =========================
+       SEGURIDAD HTML
+    ========================== */
+
+    function escapeHTML(texto) {
+
+        return String(texto || "")
+
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+
+            .replace(
+                /</g,
+                "&lt;"
+            )
+
+            .replace(
+                />/g,
+                "&gt;"
+            )
+
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+    }
+
+
+    /* =========================
+       VERIFICACIÓN DE CORREO
+    ========================== */
+
+    let procesandoConfirmacionCorreo = false;
+
+    async function comprobarConfirmacionCorreo() {
+        const url = new URL(window.location.href);
+        const hash = new URLSearchParams(
+            window.location.hash.replace(/^#/, "")
+        );
+
+        const type = url.searchParams.get("type") || hash.get("type");
+
+        if (type !== "signup") {
+            return false;
+        }
+
+        procesandoConfirmacionCorreo = true;
+
+        const { data, error } = await supabaseClient.auth.getSession();
+
+        if (error) {
+            console.error("Error al comprobar la confirmación:", error);
+            mostrarMensaje(
+                "No pudimos comprobar la confirmación de tu correo. Inténtalo nuevamente.",
+                true
+            );
+            return true;
+        }
+
+        const usuario = convertirUsuarioSupabase(data.session?.user);
+
+        if (!usuario) {
+            mostrarMensaje(
+                "El correo fue confirmado, pero no se pudo recuperar la sesión automáticamente. Intenta iniciar sesión.",
+                true
+            );
+            return true;
+        }
+
+        guardarUsuarioLocal(usuario);
+
+        mostrarMensaje(
+            "¡Correo confirmado correctamente! Tu cuenta de MS PC Gaming Store ha sido verificada.",
+            false
+        );
+
+        setTimeout(function() {
+            window.location.href = "index.html";
+        }, 1200);
+
+        return true;
+    }
+
+    supabaseClient.auth.onAuthStateChange(function(event, session) {
+        console.log("Supabase Auth:", event);
+
+        const usuario = convertirUsuarioSupabase(session?.user);
+
+        guardarUsuarioLocal(usuario);
+
+        if (event === "SIGNED_OUT") {
+            mostrarRegistro();
+            return;
+        }
+
+        if (
+            event === "SIGNED_IN" ||
+            event === "TOKEN_REFRESHED" ||
+            event === "USER_UPDATED"
+        ) {
+            if (!procesandoConfirmacionCorreo && usuario) {
+                mostrarCuenta();
+            }
+        }
+    });
+
+
+    /* =========================
+       AL ABRIR REGISTRO.HTML
+    ========================== */
+
+    (async function() {
+        const regresoDeConfirmacion = await comprobarConfirmacionCorreo();
+
+        if (!regresoDeConfirmacion) {
+            await sincronizarSesion();
+        }
+    })();
+
+</script>
+
+</body>
+</html>

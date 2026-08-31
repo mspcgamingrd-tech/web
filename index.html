@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mi Carrito - MS PC Gaming Store</title>
+
+    <style>
+
+        /* =========================
+           ESTILO GENERAL
+        ========================= */
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #111;
+        }
+
+
+        /* =========================
+           BARRA DE NAVEGACIÓN
+        ========================= */
+
+        nav {
+            padding: 8px 20px;
+            background-color: #374151;
+        }
+
+        .menu-principal {
+            display: flex;
+            align-items: center;
+            max-width: 1200px;
+            margin: auto;
+            min-height: 60px;
+            gap: 20px;
+        }
+
+
+        /* =========================
+           LOGO + NOMBRE
+        ========================= */
+
+        .marca-tienda {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .logo-carrito {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+
+        .marca-tienda span {
+            color: white !important;
+            font-weight: bold;
+            font-size: 25px;
+            position: relative;
+            top: -2px;
+        }
+
+        .marca-tienda:hover span {
+            color: #007bff !important;
+        }
+
+
+        /* =========================
+           ENLACES
+        ========================= */
+
+        .enlaces-menu {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .enlaces-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 8px 10px;
+        }
+
+        .enlaces-menu a:hover {
+            color: #007bff;
+        }
+
+
+        /* =========================
+           BUSCADOR
+        ========================= */
+
+        .buscador {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .buscador input {
+            width: 300px;
+            padding: 9px 10px;
+            border: none;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .buscador button {
+            padding: 9px 12px;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .buscador button:hover {
+            background-color: #0056b3;
+        }
+
+        .buscador button img {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+        }
+
+
+        /* =========================
+           CONTENEDOR DEL CARRITO
+        ========================= */
+
+        .contenedor-carrito {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+
+        /* =========================
+           TÍTULO
+        ========================= */
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+
+        .icono-carrito-titulo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            vertical-align: -14px;
+            margin-right: -10px;
+        }
+
+
+        /* =========================
+           DOS COLUMNAS
+        ========================= */
+
+        .contenido-carrito {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            align-items: start;
+        }
+
+
+        /* =========================
+           LISTA DE PRODUCTOS
+        ========================= */
+
+        .lista-productos {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            min-height: 400px;
+        }
+
+        .lista-productos h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+
+        /* =========================
+           PRODUCTO
+        ========================= */
+
+        .producto-carrito {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .producto-carrito img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .informacion-producto {
+            flex: 1;
+        }
+
+        .informacion-producto h3 {
+            margin: 0 0 8px;
+        }
+
+        .precio {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 18px;
+        }
+
+
+        /* =========================
+           CANTIDAD
+        ========================= */
+
+        .cantidad {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .cantidad button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .cantidad button:hover {
+            background-color: #0056b3;
+        }
+
+        .cantidad span {
+            min-width: 25px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+
+        /* =========================
+           ELIMINAR
+        ========================= */
+
+        .eliminar {
+            border: none;
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .eliminar:hover {
+            background-color: #b02a37;
+        }
+
+
+        /* =========================
+           RESUMEN
+        ========================= */
+
+        .resumen {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            position: sticky;
+            top: 20px;
+        }
+
+        .resumen h2 {
+            margin-top: 0;
+        }
+
+        .fila-resumen {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 17px;
+        }
+
+        .total {
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+
+        /* =========================
+           BOTÓN PROCEDER AL PAGO
+        ========================= */
+
+        .proceder {
+            display: block;
+            width: 100%;
+            padding: 13px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 7px;
+            background-color: #007bff;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .proceder:hover {
+            background-color: #0056b3;
+        }
+
+
+        /* =========================
+           BOTÓN COMPRAR
+        ========================= */
+
+        .comprar {
+            display: block;
+            width: 100%;
+            padding: 13px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 7px;
+            background-color: #25d366;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .comprar:hover {
+            background-color: #1da851;
+        }
+
+
+        /* =========================
+           CARRITO VACÍO
+        ========================= */
+
+        .carrito-vacio {
+            text-align: center;
+            padding: 60px 20px;
+            color: #777;
+        }
+
+
+        /* =========================
+           CELULARES
+        ========================= */
+
+        @media (max-width: 800px) {
+
+            .menu-principal {
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 5px 0;
+            }
+
+            .enlaces-menu {
+                order: 2;
+                width: 100%;
+            }
+
+            .buscador {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .buscador input {
+                width: 60%;
+            }
+
+            .contenido-carrito {
+                grid-template-columns: 1fr;
+            }
+
+            .resumen {
+                position: static;
+            }
+
+            .producto-carrito {
+                flex-wrap: wrap;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+
+    <!-- =========================
+         MENÚ DE NAVEGACIÓN
+    ========================= -->
+
+    <nav>
+
+        <div class="menu-principal">
+
+
+            <!-- LOGO PEQUEÑO + NOMBRE -->
+
+            <a href="index.html" class="marca-tienda">
+
+                <img
+                    class="logo-carrito"
+                    src="Multimedia web/RECURSOS DELA WEB/ms carrito.png.png"
+                    alt="MS PC Gaming">
+
+                <span>MS PC GAMING RD</span>
+
+            </a>
+
+
+            <!-- ENLACES -->
+
+            <div class="enlaces-menu">
+
+                <a href="index.html">
+                    Inicio
+                </a>
+
+                <a href="index.html#productos">
+                    Productos
+                </a>
+
+                <a href="index.html#contacto">
+                    Contacto
+                </a>
+
+            </div>
+
+
+            <!-- BUSCADOR -->
+
+            <div class="buscador">
+
+                <input
+                    type="text"
+                    id="buscar"
+                    placeholder="Buscar productos..."
+                >
+
+                <button onclick="buscarProducto()">
+
+                    <img
+                        src="Multimedia web/RECURSOS DELA WEB/lupa png.png"
+                        alt="Buscar"
+                    >
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================
+         CARRITO
+    ========================= -->
+
+    <main class="contenedor-carrito">
+
+
+        <!-- TÍTULO -->
+
+        <h1>
+
+            <img
+                src="Multimedia web/RECURSOS DELA WEB/carrito png.png"
+                alt="Carrito"
+                class="icono-carrito-titulo"
+            >
+
+            Mi carrito
+
+        </h1>
+
+
+        <!-- =========================
+             DOS COLUMNAS
+        ========================= -->
+
+        <div class="contenido-carrito">
+
+
+            <!-- =========================
+                 PRODUCTOS AGREGADOS
+            ========================= -->
+
+            <section class="lista-productos">
+
+                <h2>
+                    Productos agregados
+                </h2>
+
+                <div id="productos-carrito">
+
+                    <!-- Aquí aparecerán los productos -->
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+                 RESUMEN
+            ========================= -->
+
+            <aside class="resumen">
+
+                <h2>
+                    Resumen del carrito
+                </h2>
+
+
+                <div class="fila-resumen">
+
+                    <span>
+                        Productos:
+                    </span>
+
+                    <span id="cantidad-productos">
+                        0
+                    </span>
+
+                </div>
+
+
+                <div class="fila-resumen">
+
+                    <span>
+                        Subtotal:
+                    </span>
+
+                    <span id="subtotal">
+                        RD$0
+                    </span>
+
+                </div>
+
+
+                <div class="fila-resumen total">
+
+                    <span>
+                        Total:
+                    </span>
+
+                    <span id="total">
+                        RD$0
+                    </span>
+
+                </div>
+
+
+                <button
+                    class="proceder"
+                    onclick="procederPago()"
+                >
+                    PROCEDER AL PAGO
+                </button>
+
+
+                <button
+                    class="comprar"
+                    onclick="comprarPorWhatsApp()"
+                >
+                    COMPRAR
+                </button>
+
+            </aside>
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================= -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+
+        /* =========================
+           SUPABASE STORAGE - RECURSOS FIJOS
+           ========================= */
+        const SUPABASE_URL = "https://tqcoguvqoxvjohdzngqe.supabase.co";
+        const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_CyIQ-3xksclxNp2j-X2JAA_DUbdIMn_";
+        const SUPABASE_WEB_ASSETS_BUCKET = "productos";
+
+        const supabaseClient = window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_PUBLISHABLE_KEY,
+            {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true
+                }
+            }
+        );
+
+        function urlRecursoWebSupabase(rutaSupabase, rutaLocal) {
+            try {
+                const resultado = supabaseClient.storage
+                    .from(SUPABASE_WEB_ASSETS_BUCKET)
+                    .getPublicUrl(rutaSupabase);
+                return resultado?.data?.publicUrl || rutaLocal;
+            } catch (error) {
+                console.warn("No se pudo generar la URL del recurso web:", rutaSupabase, error);
+                return rutaLocal;
+            }
+        }
+
+        function configurarImagenWeb(elemento, rutaSupabase, rutaLocal) {
+            if (!elemento) return;
+            elemento.dataset.localFallback = rutaLocal;
+            elemento.onerror = function() {
+                this.onerror = null;
+                this.src = this.dataset.localFallback;
+            };
+            elemento.src = urlRecursoWebSupabase(rutaSupabase, rutaLocal);
+        }
+
+        function configurarRecursosWeb() {
+            configurarImagenWeb(
+                document.querySelector(".logo-carrito"),
+                "web/ms carrito.png.png",
+                "Multimedia web/RECURSOS DELA WEB/ms carrito.png.png"
+            );
+            configurarImagenWeb(
+                document.querySelector(".buscador button img"),
+                "web/lupa png.png",
+                "Multimedia web/RECURSOS DELA WEB/lupa png.png"
+            );
+            configurarImagenWeb(
+                document.querySelector(".icono-carrito-titulo"),
+                "web/carrito png.png",
+                "Multimedia web/RECURSOS DELA WEB/carrito png.png"
+            );
+        }
+
+        configurarRecursosWeb();
+
+
+        /* =========================
+           OBTENER CARRITO
+        ========================= */
+
+        function obtenerCarrito() {
+
+            return JSON.parse(
+                localStorage.getItem("carrito")
+            ) || [];
+
+        }
+
+
+        /* =========================
+           GUARDAR CARRITO
+        ========================= */
+
+        function guardarCarrito(carrito) {
+
+            localStorage.setItem(
+                "carrito",
+                JSON.stringify(carrito)
+            );
+
+        }
+
+
+        /* =========================
+           MOSTRAR CARRITO
+        ========================= */
+
+        function mostrarCarrito() {
+
+            const carrito = obtenerCarrito();
+
+            const contenedor =
+                document.getElementById(
+                    "productos-carrito"
+                );
+
+            contenedor.innerHTML = "";
+
+
+            if (carrito.length === 0) {
+
+                contenedor.innerHTML = `
+
+                    <div class="carrito-vacio">
+
+                        <h3>
+                            Tu carrito está vacío
+                        </h3>
+
+                        <p>
+                            Agrega productos desde nuestra tienda.
+                        </p>
+
+                    </div>
+
+                `;
+
+                actualizarResumen();
+
+                return;
+
+            }
+
+
+            carrito.forEach(function(producto, indice) {
+
+                const productoHTML =
+                    document.createElement("div");
+
+                productoHTML.className =
+                    "producto-carrito";
+
+
+                productoHTML.innerHTML = `
+
+                    <img
+                        src="${producto.imagen}"
+                        alt="${producto.nombre}"
+                    >
+
+
+                    <div class="informacion-producto">
+
+                        <h3>
+                            ${producto.nombre}
+                        </h3>
+
+
+                        <p class="precio">
+
+                            RD$${producto.precio.toLocaleString("es-DO")}
+
+                        </p>
+
+
+                        <div class="cantidad">
+
+                            <button
+                                onclick="cambiarCantidad(${indice}, -1)"
+                            >
+                                −
+                            </button>
+
+
+                            <span>
+                                ${producto.cantidad}
+                            </span>
+
+
+                            <button
+                                onclick="cambiarCantidad(${indice}, 1)"
+                            >
+                                +
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="eliminar"
+                        onclick="eliminarProducto(${indice})"
+                    >
+                        ELIMINAR
+                    </button>
+
+                `;
+
+
+                contenedor.appendChild(
+                    productoHTML
+                );
+
+            });
+
+
+            actualizarResumen();
+
+        }
+
+
+        /* =========================
+           CAMBIAR CANTIDAD
+        ========================= */
+
+        function cambiarCantidad(indice, cambio) {
+
+            const carrito = obtenerCarrito();
+
+            carrito[indice].cantidad += cambio;
+
+
+            if (carrito[indice].cantidad <= 0) {
+
+                carrito.splice(indice, 1);
+
+            }
+
+
+            guardarCarrito(carrito);
+
+            mostrarCarrito();
+
+        }
+
+
+        /* =========================
+           ELIMINAR PRODUCTO
+        ========================= */
+
+        function eliminarProducto(indice) {
+
+            const carrito = obtenerCarrito();
+
+            carrito.splice(indice, 1);
+
+            guardarCarrito(carrito);
+
+            mostrarCarrito();
+
+        }
+
+
+        /* =========================
+           ACTUALIZAR RESUMEN
+        ========================= */
+
+        function actualizarResumen() {
+
+            const carrito = obtenerCarrito();
+
+            let cantidadProductos = 0;
+
+            let total = 0;
+
+
+            carrito.forEach(function(producto) {
+
+                cantidadProductos +=
+                    producto.cantidad;
+
+                total +=
+                    producto.precio *
+                    producto.cantidad;
+
+            });
+
+
+            document.getElementById(
+                "cantidad-productos"
+            ).textContent =
+                cantidadProductos;
+
+
+            document.getElementById(
+                "subtotal"
+            ).textContent =
+                "RD$" +
+                total.toLocaleString("es-DO");
+
+
+            document.getElementById(
+                "total"
+            ).textContent =
+                "RD$" +
+                total.toLocaleString("es-DO");
+
+        }
+
+
+        /* =========================
+           PROCEDER AL PAGO
+        ========================= */
+
+        function procederPago() {
+
+            const carrito = obtenerCarrito();
+
+
+            if (carrito.length === 0) {
+
+                alert(
+                    "Tu carrito está vacío."
+                );
+
+                return;
+
+            }
+
+
+            alert(
+                "Revisa tu pedido y luego presiona COMPRAR para enviarlo por WhatsApp."
+            );
+
+        }
+
+
+        /* =========================
+           COMPRAR POR WHATSAPP
+        ========================= */
+
+        function comprarPorWhatsApp() {
+
+            const carrito = obtenerCarrito();
+
+
+            if (carrito.length === 0) {
+
+                alert(
+                    "Tu carrito está vacío."
+                );
+
+                return;
+
+            }
+
+
+            let usuario = JSON.parse(localStorage.getItem("usuario")) || 
+                          JSON.parse(localStorage.getItem("usuarioRegistrado")) || 
+                          {};
+
+            let nombreCliente = usuario.nombre || usuario.nombreCompleto || "";
+
+            let saludo = nombreCliente !== "" 
+                ? "Hola, mi nombre es " + nombreCliente + ".%0A%0A"
+                : "Hola, me gustaría realizar una compra.%0A%0A";
+
+            let mensaje =
+                saludo +
+                "Me interesa comprar los siguientes productos:%0A%0A";
+
+
+            carrito.forEach(function(producto) {
+
+                mensaje +=
+                    "• " +
+                    producto.nombre +
+                    " x" +
+                    producto.cantidad +
+                    " — RD$" +
+                    (
+                        producto.precio *
+                        producto.cantidad
+                    ).toLocaleString("es-DO") +
+                    "%0A";
+
+            });
+
+
+            let total = 0;
+
+
+            carrito.forEach(function(producto) {
+
+                total +=
+                    producto.precio *
+                    producto.cantidad;
+
+            });
+
+
+            mensaje +=
+                "%0A%0ATotal de compra: RD$" +
+                total.toLocaleString("es-DO") +
+                "%0A%0AQuedo atento para completar mi pedido. Gracias.";
+
+
+            const telefono =
+                "18099682493";
+
+
+            window.location.href =
+                "https://wa.me/" +
+                telefono +
+                "?text=" +
+                mensaje;
+
+        }
+
+
+        /* =========================
+           BUSCADOR
+        ========================= */
+
+        function buscarProducto() {
+
+            const texto =
+                document.getElementById(
+                    "buscar"
+                ).value.trim();
+
+
+            if (texto === "") {
+
+                window.location.href =
+                    "index.html";
+
+                return;
+
+            }
+
+
+            window.location.href =
+                "index.html?buscar=" +
+                encodeURIComponent(texto);
+
+        }
+
+
+        document.getElementById(
+            "buscar"
+        ).addEventListener(
+            "keydown",
+            function(event) {
+
+                if (event.key === "Enter") {
+
+                    buscarProducto();
+
+                }
+
+            }
+        );
+
+
+        /* =========================
+           CARGAR CARRITO
+        ========================= */
+
+        mostrarCarrito();
+
+    </script>
+
+</body>
+
+</html>
