@@ -37,6 +37,19 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .admin{border:1px solid #e5e7eb;border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .preview{max-width:220px;max-height:180px;margin-top:8px;object-fit:contain;border-radius:7px}
 .ayuda{font-size:13px;color:#6b7280}
+.reviews-admin{display:grid;gap:14px}
+.resena-admin{border:1px solid #e5e7eb;border-radius:10px;padding:15px;background:#fff}
+.resena-admin-cabecera{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.resena-admin-producto{font-weight:700;font-size:17px}
+.resena-admin-usuario{color:#4b5563;margin-top:4px}
+.resena-admin-estrellas{margin:8px 0;font-size:18px}
+.resena-admin-comentario{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0;color:#1f2937}
+.resena-admin-fecha{font-size:12px;color:#6b7280}
+.resena-admin-archivos{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.resena-admin-archivos img,.resena-admin-archivos video{width:90px;height:70px;object-fit:cover;border-radius:7px;border:1px solid #d1d5db;background:#f8fafc}
+.resena-admin-archivo-video{position:relative;display:inline-flex}
+.resena-admin-archivo-video span{position:absolute;left:5px;bottom:5px;background:rgba(0,0,0,.75);color:#fff;border-radius:4px;padding:2px 5px;font-size:11px}
+@media(max-width:700px){.resena-admin-cabecera{flex-direction:column}}
 .oculto{display:none}
 @media(max-width:700px){
   .grid{grid-template-columns:1fr}
@@ -162,10 +175,17 @@ button:disabled{opacity:.6;cursor:not-allowed}
                     </div>
 
                     <div class="campo">
-                        <label>Imagen</label>
+                        <label>Imagen principal</label>
                         <input id="imagen" type="file" accept="image/jpeg,image/png,image/webp">
-                        <div class="ayuda">Formatos permitidos: JPG, PNG o WEBP. Máximo 5 MB.</div>
+                        <div class="ayuda">La imagen principal es la que aparece en la tarjeta del producto. JPG, PNG o WEBP. Máximo 5 MB.</div>
                         <img id="vistaPrevia" class="preview oculto" alt="Vista previa del producto">
+                    </div>
+
+                    <div class="campo full">
+                        <label>Galería del producto</label>
+                        <input id="multimediaProducto" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/ogg" multiple>
+                        <div class="ayuda">Puedes agregar varias imágenes y videos cortos. Imágenes: máximo 5 MB cada una. Videos: máximo 30 MB cada uno. Al editar, los nuevos archivos se agregan a la galería existente.</div>
+                        <div id="vistaGaleriaAdmin" class="ayuda"></div>
                     </div>
 
                     <div class="campo">
@@ -202,6 +222,15 @@ button:disabled{opacity:.6;cursor:not-allowed}
         <div class="panel">
             <h2>Productos</h2>
             <div id="listaProductos" class="productos"></div>
+        </div>
+
+        <div class="panel" id="panelResenas">
+            <h2>Moderación de reseñas</h2>
+            <p class="ayuda">Aquí puedes revisar las reseñas guardadas en Supabase y eliminar las que consideres necesario. Los cambios se aplican directamente a la base de datos.</p>
+            <div class="acciones">
+                <button class="principal" type="button" id="btnCargarResenas">Actualizar reseñas</button>
+            </div>
+            <div id="listaResenasAdmin" class="reviews-admin" style="margin-top:15px"></div>
         </div>
 
         <div class="panel" id="panelAdmins">
@@ -439,6 +468,7 @@ async function iniciar(){
         }
 
         await cargarProductos();
+        await cargarResenasAdmin();
 
         if(adminActual.rol === "principal"){
             await cargarAdmins();
@@ -712,6 +742,7 @@ async function guardarProducto(event){
 
     const id = document.getElementById("productoId").value.trim();
     const archivo = document.getElementById("imagen").files[0];
+    const archivosMultimedia = Array.from(document.getElementById("multimediaProducto").files || []);
     const btn = document.getElementById("btnGuardar");
 
     const nombre = document.getElementById("nombre").value.trim();
@@ -739,12 +770,32 @@ async function guardarProducto(event){
         ];
 
         if(!tiposPermitidos.includes(archivo.type)){
-            alert("La imagen debe ser JPG, PNG o WEBP.");
+            alert("La imagen principal debe ser JPG, PNG o WEBP.");
             return;
         }
 
         if(archivo.size > 5 * 1024 * 1024){
-            alert("La imagen no puede superar 5 MB.");
+            alert("La imagen principal no puede superar 5 MB.");
+            return;
+        }
+    }
+
+    for(const archivoMedia of archivosMultimedia){
+        const esImagen = ["image/jpeg","image/png","image/webp"].includes(archivoMedia.type);
+        const esVideo = ["video/mp4","video/webm","video/ogg"].includes(archivoMedia.type);
+
+        if(!esImagen && !esVideo){
+            alert("La galería solo permite JPG, PNG, WEBP, MP4, WEBM u OGG.");
+            return;
+        }
+
+        const limite = esVideo ? 30 * 1024 * 1024 : 5 * 1024 * 1024;
+        if(archivoMedia.size > limite){
+            alert(
+                esVideo
+                ? "Cada video no puede superar 30 MB."
+                : "Cada imagen de la galería no puede superar 5 MB."
+            );
             return;
         }
     }
@@ -754,6 +805,23 @@ async function guardarProducto(event){
 
     try{
         let imagenUrl = null;
+        let multimedia = [];
+
+        if(id){
+            const {data:productoExistente,error:errorProductoExistente} = await supabaseClient
+                .from("products")
+                .select("multimedia")
+                .eq("id",id)
+                .single();
+
+            if(errorProductoExistente && !String(errorProductoExistente.message || "").toLowerCase().includes("multimedia")){
+                throw new Error("No se pudo leer la galería actual: " + errorProductoExistente.message);
+            }
+
+            if(Array.isArray(productoExistente?.multimedia)){
+                multimedia = productoExistente.multimedia.filter(item => item && item.url);
+            }
+        }
 
         if(archivo){
             const extension =
@@ -789,6 +857,36 @@ async function guardarProducto(event){
             imagenUrl = urlData.publicUrl;
         }
 
+        for(const archivoMedia of archivosMultimedia){
+            const extension = archivoMedia.name.split(".").pop().toLowerCase();
+            const nombreArchivo = "galeria/" + crypto.randomUUID() + "." + extension;
+
+            const {error:uploadMediaError} = await supabaseClient.storage
+                .from("productos")
+                .upload(
+                    nombreArchivo,
+                    archivoMedia,
+                    {
+                        upsert:false,
+                        contentType:archivoMedia.type
+                    }
+                );
+
+            if(uploadMediaError){
+                throw new Error("No se pudo subir un archivo de la galería: " + uploadMediaError.message);
+            }
+
+            const {data:mediaUrlData} = supabaseClient.storage
+                .from("productos")
+                .getPublicUrl(nombreArchivo);
+
+            multimedia.push({
+                url: mediaUrlData.publicUrl,
+                tipo: archivoMedia.type.startsWith("video/") ? "video" : "imagen",
+                nombre: archivoMedia.name
+            });
+        }
+
         const producto = {
             nombre,
             precio,
@@ -811,6 +909,8 @@ async function guardarProducto(event){
         if(imagenUrl){
             producto.imagen_url = imagenUrl;
         }
+
+        producto.multimedia = multimedia;
 
         let resultado;
 
@@ -861,6 +961,14 @@ function editarProducto(p){
     document.getElementById("datosTecnicos").value = p.datos_tecnicos || "";
     document.getElementById("cantidad").value = p.cantidad ?? 0;
     document.getElementById("disponible").value = String(!!p.disponible);
+
+    const archivosActuales = Array.isArray(p.multimedia) ? p.multimedia.length : 0;
+    const vistaGaleria = document.getElementById("vistaGaleriaAdmin");
+    if(vistaGaleria){
+        vistaGaleria.textContent = archivosActuales
+            ? "Galería actual: " + archivosActuales + " archivo(s). Los nuevos archivos que selecciones se agregarán."
+            : "Este producto todavía no tiene archivos adicionales en la galería.";
+    }
 
     document.getElementById("tituloFormulario").textContent =
         "Editar producto";
@@ -917,11 +1025,34 @@ function limpiarFormulario(){
     const vista = document.getElementById("vistaPrevia");
     vista.src = "";
     vista.classList.add("oculto");
+
+    const multimediaInput = document.getElementById("multimediaProducto");
+    if(multimediaInput) multimediaInput.value = "";
+
+    const vistaGaleria = document.getElementById("vistaGaleriaAdmin");
+    if(vistaGaleria) vistaGaleria.textContent = "Puedes agregar imágenes y videos cortos del producto.";
 }
 
 /* =========================================================
    VISTA PREVIA DE IMAGEN
    ========================================================= */
+
+document.getElementById("multimediaProducto").addEventListener("change",function(){
+    const archivos = Array.from(this.files || []);
+    const vista = document.getElementById("vistaGaleriaAdmin");
+
+    if(!archivos.length){
+        vista.textContent = "Puedes agregar imágenes y videos cortos del producto.";
+        return;
+    }
+
+    const imagenes = archivos.filter(a => a.type.startsWith("image/")).length;
+    const videos = archivos.filter(a => a.type.startsWith("video/")).length;
+    const partes = [];
+    if(imagenes) partes.push(imagenes + (imagenes === 1 ? " imagen" : " imágenes"));
+    if(videos) partes.push(videos + (videos === 1 ? " video" : " videos"));
+    vista.textContent = "Seleccionados para agregar: " + partes.join(" · ");
+});
 
 document.getElementById("imagen").addEventListener("change",function(){
     const archivo = this.files[0];
@@ -942,6 +1073,218 @@ document.getElementById("imagen").addEventListener("change",function(){
     vista.src = URL.createObjectURL(archivo);
     vista.classList.remove("oculto");
 });
+
+/* =========================================================
+   MODERACIÓN DE RESEÑAS
+   ========================================================= */
+
+function crearElementoTexto(tag, clase, texto){
+    const elemento = document.createElement(tag);
+    if(clase) elemento.className = clase;
+    elemento.textContent = texto || "";
+    return elemento;
+}
+
+function mostrarArchivosResenaAdmin(contenedor, archivos){
+    if(!Array.isArray(archivos) || !archivos.length) return;
+
+    archivos.forEach(archivo=>{
+        if(!archivo || !archivo.url) return;
+
+        const tipo = String(archivo.tipo || "").toLowerCase();
+
+        if(tipo.startsWith("video/") || /\.(mp4|webm|ogg)(\?|$)/i.test(archivo.url)){
+            const envoltorio = document.createElement("div");
+            envoltorio.className = "resena-admin-archivo-video";
+
+            const video = document.createElement("video");
+            video.src = archivo.url;
+            video.controls = true;
+            video.preload = "metadata";
+            video.title = archivo.nombre || "Video de reseña";
+
+            const etiqueta = document.createElement("span");
+            etiqueta.textContent = "VIDEO";
+
+            envoltorio.append(video, etiqueta);
+            contenedor.appendChild(envoltorio);
+        }else{
+            const imagen = document.createElement("img");
+            imagen.src = archivo.url;
+            imagen.alt = archivo.nombre || "Imagen de reseña";
+            imagen.loading = "lazy";
+            contenedor.appendChild(imagen);
+        }
+    });
+}
+
+async function cargarResenasAdmin(){
+    if(!adminActual){
+        alert("No tienes permisos de administrador.");
+        return;
+    }
+
+    const contenedor = document.getElementById("listaResenasAdmin");
+    const boton = document.getElementById("btnCargarResenas");
+    if(!contenedor) return;
+
+    if(boton){
+        boton.disabled = true;
+        boton.textContent = "Cargando...";
+    }
+
+    contenedor.innerHTML = "<p class=\"ayuda\">Cargando reseñas...</p>";
+
+    try{
+        const {data,error} = await supabaseClient
+            .from("resenas")
+            .select("*")
+            .order("fecha_creacion",{ascending:false});
+
+        if(error){
+            console.error("Error cargando reseñas:",error);
+            contenedor.innerHTML = "";
+            const aviso = crearElementoTexto("p","ayuda",
+                "No se pudieron cargar las reseñas: " + error.message
+            );
+            contenedor.appendChild(aviso);
+            return;
+        }
+
+        contenedor.innerHTML = "";
+
+        if(!data || data.length === 0){
+            contenedor.appendChild(
+                crearElementoTexto("p","ayuda","No hay reseñas publicadas.")
+            );
+            return;
+        }
+
+        data.forEach(resena=>{
+            const bloque = document.createElement("article");
+            bloque.className = "resena-admin";
+
+            const cabecera = document.createElement("div");
+            cabecera.className = "resena-admin-cabecera";
+
+            const informacion = document.createElement("div");
+            informacion.appendChild(
+                crearElementoTexto(
+                    "div",
+                    "resena-admin-producto",
+                    resena.producto_nombre || "Producto sin nombre"
+                )
+            );
+            informacion.appendChild(
+                crearElementoTexto(
+                    "div",
+                    "resena-admin-usuario",
+                    "Usuario: " + (resena.usuario_nombre || resena.usuario_id || "Usuario")
+                )
+            );
+
+            const calificacion = Math.max(0,Math.min(5,Number(resena.calificacion)||0));
+            informacion.appendChild(
+                crearElementoTexto(
+                    "div",
+                    "resena-admin-estrellas",
+                    "★".repeat(calificacion) + "☆".repeat(5-calificacion) + "  " + calificacion + "/5"
+                )
+            );
+
+            cabecera.appendChild(informacion);
+
+            const botonEliminar = document.createElement("button");
+            botonEliminar.type = "button";
+            botonEliminar.className = "peligro";
+            botonEliminar.textContent = "Eliminar reseña";
+            botonEliminar.onclick = ()=>eliminarResenaAdmin(resena);
+            cabecera.appendChild(botonEliminar);
+
+            bloque.appendChild(cabecera);
+            bloque.appendChild(
+                crearElementoTexto(
+                    "div",
+                    "resena-admin-comentario",
+                    resena.comentario || "Sin comentario"
+                )
+            );
+
+            let fecha = resena.fecha_creacion || "";
+            if(fecha){
+                const fechaObj = new Date(fecha);
+                if(!Number.isNaN(fechaObj.getTime())){
+                    fecha = fechaObj.toLocaleString("es-DO");
+                }
+            }
+            bloque.appendChild(
+                crearElementoTexto("div","resena-admin-fecha",fecha)
+            );
+
+            const archivos = document.createElement("div");
+            archivos.className = "resena-admin-archivos";
+            mostrarArchivosResenaAdmin(archivos,resena.archivos);
+            if(archivos.children.length){
+                bloque.appendChild(archivos);
+            }
+
+            contenedor.appendChild(bloque);
+        });
+
+    }catch(error){
+        console.error("Error inesperado cargando reseñas:",error);
+        contenedor.innerHTML = "";
+        contenedor.appendChild(
+            crearElementoTexto("p","ayuda","Ocurrió un error al cargar las reseñas.")
+        );
+    }finally{
+        if(boton){
+            boton.disabled = false;
+            boton.textContent = "Actualizar reseñas";
+        }
+    }
+}
+
+async function eliminarResenaAdmin(resena){
+    if(!adminActual){
+        alert("No tienes permisos de administrador.");
+        return;
+    }
+
+    const producto = resena.producto_nombre || "Producto";
+    const usuario = resena.usuario_nombre || resena.usuario_id || "Usuario";
+
+    if(!resena.id){
+        alert("Esta reseña no tiene un ID válido y no puede eliminarse desde el panel.");
+        return;
+    }
+
+    if(!confirm(
+        "¿Seguro que quieres eliminar esta reseña?\n\n" +
+        "Producto: " + producto + "\n" +
+        "Usuario: " + usuario + "\n\n" +
+        "Esta acción no se puede deshacer."
+    )){
+        return;
+    }
+
+    const {error} = await supabaseClient
+        .from("resenas")
+        .delete()
+        .eq("id",resena.id);
+
+    if(error){
+        console.error("Error eliminando reseña:",error);
+        alert(
+            "No se pudo eliminar la reseña.\n\n" +
+            error.message +
+            "\n\nSi Supabase indica un problema de permisos (RLS), hay que revisar la política DELETE de la tabla resenas."
+        );
+        return;
+    }
+
+    await cargarResenasAdmin();
+}
 
 /* =========================================================
    ADMINISTRADORES
@@ -1120,6 +1463,11 @@ async function quitarAdmin(userId){
 
 document.getElementById("formProducto")
     .addEventListener("submit",guardarProducto);
+
+const botonCargarResenas=document.getElementById("btnCargarResenas");
+if(botonCargarResenas){
+    botonCargarResenas.addEventListener("click",cargarResenasAdmin);
+}
 
 const botonMigracion=document.getElementById("btnMigrarAntiguos");
 if(botonMigracion){
