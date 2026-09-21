@@ -183,8 +183,18 @@ button:disabled{opacity:.6;cursor:not-allowed}
 
                     <div class="campo full">
                         <label>Galería del producto</label>
-                        <input id="multimediaProducto" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/ogg" multiple>
-                        <div class="ayuda">Puedes agregar varias imágenes y videos cortos. Imágenes: máximo 5 MB cada una. Videos: máximo 30 MB cada uno. Al editar, los nuevos archivos se agregan a la galería existente.</div>
+                        <div style="display:grid;gap:12px;">
+                            <div>
+                                <label for="imagenesProducto">Imágenes del producto (máximo 5)</label>
+                                <input id="imagenesProducto" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+                                <div class="ayuda">Puedes seleccionar hasta 5 imágenes. JPG, PNG o WEBP. Máximo 5 MB por imagen.</div>
+                            </div>
+                            <div>
+                                <label for="videoProducto">Video del producto (máximo 1)</label>
+                                <input id="videoProducto" type="file" accept="video/mp4,video/webm,video/ogg">
+                                <div class="ayuda">Puedes agregar 1 video corto. MP4, WEBM u OGG. Máximo 30 MB.</div>
+                            </div>
+                        </div>
                         <div id="vistaGaleriaAdmin" class="ayuda"></div>
                     </div>
 
@@ -742,7 +752,9 @@ async function guardarProducto(event){
 
     const id = document.getElementById("productoId").value.trim();
     const archivo = document.getElementById("imagen").files[0];
-    const archivosMultimedia = Array.from(document.getElementById("multimediaProducto").files || []);
+    const imagenesMultimedia = Array.from(document.getElementById("imagenesProducto").files || []);
+    const videoMultimedia = document.getElementById("videoProducto").files[0] || null;
+    const archivosMultimedia = imagenesMultimedia.concat(videoMultimedia ? [videoMultimedia] : []);
     const btn = document.getElementById("btnGuardar");
 
     const nombre = document.getElementById("nombre").value.trim();
@@ -778,6 +790,11 @@ async function guardarProducto(event){
             alert("La imagen principal no puede superar 5 MB.");
             return;
         }
+    }
+
+    if(imagenesMultimedia.length > 5){
+        alert("Puedes subir un máximo de 5 imágenes por producto.");
+        return;
     }
 
     for(const archivoMedia of archivosMultimedia){
@@ -820,6 +837,22 @@ async function guardarProducto(event){
 
             if(Array.isArray(productoExistente?.multimedia)){
                 multimedia = productoExistente.multimedia.filter(item => item && item.url);
+            }
+
+            const imagenesExistentes = multimedia.filter(item => item.tipo !== "video").length;
+            const videosExistentes = multimedia.filter(item => item.tipo === "video").length;
+            const imagenesNuevas = imagenesMultimedia.length;
+
+            if(imagenesExistentes + imagenesNuevas > 5){
+                throw new Error("Este producto ya tiene " + imagenesExistentes + " imágenes. El máximo permitido es 5 en total.");
+            }
+
+            if(videosExistentes + (videoMultimedia ? 1 : 0) > 1){
+                throw new Error("Este producto ya tiene un video. Solo se permite 1 video por producto.");
+            }
+        } else {
+            if(imagenesMultimedia.length > 5){
+                throw new Error("Puedes subir un máximo de 5 imágenes por producto.");
             }
         }
 
@@ -1026,8 +1059,10 @@ function limpiarFormulario(){
     vista.src = "";
     vista.classList.add("oculto");
 
-    const multimediaInput = document.getElementById("multimediaProducto");
-    if(multimediaInput) multimediaInput.value = "";
+    const imagenesInput = document.getElementById("imagenesProducto");
+    const videoInput = document.getElementById("videoProducto");
+    if(imagenesInput) imagenesInput.value = "";
+    if(videoInput) videoInput.value = "";
 
     const vistaGaleria = document.getElementById("vistaGaleriaAdmin");
     if(vistaGaleria) vistaGaleria.textContent = "Puedes agregar imágenes y videos cortos del producto.";
@@ -1037,22 +1072,25 @@ function limpiarFormulario(){
    VISTA PREVIA DE IMAGEN
    ========================================================= */
 
-document.getElementById("multimediaProducto").addEventListener("change",function(){
-    const archivos = Array.from(this.files || []);
+function actualizarVistaGaleriaAdmin(){
+    const imagenes = Array.from(document.getElementById("imagenesProducto")?.files || []);
+    const video = document.getElementById("videoProducto")?.files[0] || null;
     const vista = document.getElementById("vistaGaleriaAdmin");
+    if(!vista) return;
 
-    if(!archivos.length){
-        vista.textContent = "Puedes agregar imágenes y videos cortos del producto.";
+    if(imagenes.length > 5){
+        vista.textContent = "⚠️ Has seleccionado " + imagenes.length + " imágenes. El máximo es 5.";
         return;
     }
 
-    const imagenes = archivos.filter(a => a.type.startsWith("image/")).length;
-    const videos = archivos.filter(a => a.type.startsWith("video/")).length;
     const partes = [];
-    if(imagenes) partes.push(imagenes + (imagenes === 1 ? " imagen" : " imágenes"));
-    if(videos) partes.push(videos + (videos === 1 ? " video" : " videos"));
-    vista.textContent = "Seleccionados para agregar: " + partes.join(" · ");
-});
+    if(imagenes.length) partes.push(imagenes.length + (imagenes.length === 1 ? " imagen" : " imágenes"));
+    if(video) partes.push("1 video");
+    vista.textContent = partes.length ? "Seleccionados para agregar: " + partes.join(" · ") : "Puedes agregar hasta 5 imágenes y 1 video.";
+}
+
+document.getElementById("imagenesProducto").addEventListener("change", actualizarVistaGaleriaAdmin);
+document.getElementById("videoProducto").addEventListener("change", actualizarVistaGaleriaAdmin);
 
 document.getElementById("imagen").addEventListener("change",function(){
     const archivo = this.files[0];
