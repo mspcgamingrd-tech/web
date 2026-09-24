@@ -196,10 +196,10 @@ button:disabled{opacity:.6;cursor:not-allowed}
                         </select>
                     </div>
 
-                    <div class="campo" id="campoFechaAgotado" style="display:none;">
-                        <label>Fecha en que fue vendido / agotado</label>
+                    <div class="campo" id="campoFechaAgotado">
+                        <label>Fecha de agotado</label>
                         <input id="fechaAgotado" type="date">
-                        <div class="ayuda">Esta fecha aparecerá en la ficha pública del producto antes de las reseñas.</div>
+                        <div class="ayuda">Si el producto está agotado, indica la fecha en que quedó sin disponibilidad. Si no la colocas, se usará la fecha actual al guardar.</div>
                     </div>
 
                     <div class="campo full">
@@ -593,14 +593,6 @@ async function cargarProductos(){
             "Cantidad: " + (p.cantidad ?? 0) +
             " · " + (p.disponible ? "Disponible" : "Agotado");
 
-        const fechaVenta = document.createElement("p");
-        if(!p.disponible && p.fecha_agotado){
-            const fechaObj = new Date(p.fecha_agotado + "T00:00:00");
-            fechaVenta.textContent = "Vendido / agotado: " + (Number.isNaN(fechaObj.getTime()) ? p.fecha_agotado : fechaObj.toLocaleDateString("es-DO", {day:"numeric", month:"long", year:"numeric"}));
-        }else{
-            fechaVenta.style.display = "none";
-        }
-
         const acciones = document.createElement("div");
         acciones.className = "acciones";
 
@@ -617,7 +609,7 @@ async function cargarProductos(){
         eliminar.onclick = ()=>eliminarProducto(p);
 
         acciones.append(editar,eliminar);
-        div.append(img,h3,precio,cat,stock,fechaVenta,acciones);
+        div.append(img,h3,precio,cat,stock,acciones);
         lista.appendChild(div);
     });
 }
@@ -764,11 +756,21 @@ async function guardarProducto(event){
     const categoria = document.getElementById("categoria").value.trim();
     const cantidad = Number(document.getElementById("cantidad").value);
     const disponible = document.getElementById("disponible").value === "true";
-    const fechaAgotado = document.getElementById("fechaAgotado").value;
+    let fechaAgotado = document.getElementById("fechaAgotado").value || "";
 
-    if(!disponible && !fechaAgotado){
-        alert("Si el producto está agotado, indica la fecha en que fue vendido / agotado.");
-        return;
+    /*
+       La fecha solo corresponde a productos agotados.
+       Si se guarda como agotado sin indicar una fecha, se registra
+       automáticamente la fecha local actual del navegador.
+    */
+    if(disponible){
+        fechaAgotado = null;
+    }else if(!fechaAgotado){
+        const ahora = new Date();
+        const anio = ahora.getFullYear();
+        const mes = String(ahora.getMonth() + 1).padStart(2,"0");
+        const dia = String(ahora.getDate()).padStart(2,"0");
+        fechaAgotado = `${anio}-${mes}-${dia}`;
     }
 
     if(
@@ -920,7 +922,7 @@ async function guardarProducto(event){
                 document.getElementById("datosTecnicos").value.trim(),
             cantidad,
             disponible,
-            fecha_agotado: disponible ? null : fechaAgotado
+            fecha_agotado: fechaAgotado
         };
 
         /*
@@ -1030,13 +1032,6 @@ async function eliminarProducto(p){
     await cargarProductos();
 }
 
-function actualizarCampoFechaAgotado(){
-    const estado = document.getElementById("disponible");
-    const campo = document.getElementById("campoFechaAgotado");
-    if(!estado || !campo) return;
-    campo.style.display = estado.value === "false" ? "block" : "none";
-}
-
 /* =========================================================
    LIMPIAR FORMULARIO
    ========================================================= */
@@ -1064,6 +1059,45 @@ function limpiarFormulario(){
     const vistaGaleria = document.getElementById("vistaGaleriaAdmin");
     if(vistaGaleria) vistaGaleria.textContent = "Puedes agregar imágenes y videos cortos del producto.";
 }
+
+/* =========================================================
+   FECHA DE AGOTADO
+   ========================================================= */
+
+function actualizarCampoFechaAgotado(){
+    const estado = document.getElementById("disponible");
+    const campo = document.getElementById("campoFechaAgotado");
+    const fecha = document.getElementById("fechaAgotado");
+
+    if(!estado || !campo || !fecha) return;
+
+    const agotado = estado.value === "false";
+    campo.style.display = agotado ? "block" : "none";
+    fecha.disabled = !agotado;
+
+    if(!agotado){
+        fecha.value = "";
+    }
+}
+
+const selectorDisponible = document.getElementById("disponible");
+if(selectorDisponible){
+    selectorDisponible.addEventListener("change",function(){
+        const fecha = document.getElementById("fechaAgotado");
+
+        if(this.value === "false" && fecha && !fecha.value){
+            const ahora = new Date();
+            const anio = ahora.getFullYear();
+            const mes = String(ahora.getMonth() + 1).padStart(2,"0");
+            const dia = String(ahora.getDate()).padStart(2,"0");
+            fecha.value = `${anio}-${mes}-${dia}`;
+        }
+
+        actualizarCampoFechaAgotado();
+    });
+}
+
+actualizarCampoFechaAgotado();
 
 /* =========================================================
    VISTA PREVIA DE IMAGEN
@@ -1495,12 +1529,6 @@ async function quitarAdmin(userId){
 
 document.getElementById("formProducto")
     .addEventListener("submit",guardarProducto);
-
-const selectorDisponible = document.getElementById("disponible");
-if(selectorDisponible){
-    selectorDisponible.addEventListener("change",actualizarCampoFechaAgotado);
-    actualizarCampoFechaAgotado();
-}
 
 const botonCargarResenas=document.getElementById("btnCargarResenas");
 if(botonCargarResenas){
